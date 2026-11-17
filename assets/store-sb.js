@@ -40,6 +40,8 @@
     take(data || {});
     return me;
   }
+  // a usable account = a role that opens a view ('none' = no access, set in the dashboard)
+  const allowed = m => !!m && (m.role === 'admin' || m.role === 'boss');
   const fail = e => Object.assign(new Error(String((e && e.message) || e).replace(/^صقر:\s*/, '')), { code: e && e.code });
 
   // ── writing: one function, then the fresh snapshot ──
@@ -105,14 +107,14 @@
       const { data } = await sb.auth.getSession();
       userId = data.session ? data.session.user.id : null;
       if (!userId) return null;
-      try { return await load(); } catch (e) { return null; }
+      try { const m = await load(); return allowed(m) ? m : null; } catch (e) { return null; }
     })(),
     async signIn(email, password) {
       const { data, error } = await sb.auth.signInWithPassword({ email: String(email).trim(), password });
       if (error) throw fail(error);
       userId = data.user.id;
       const m = await load();
-      if (!m) { await sb.auth.signOut(); throw Object.assign(new Error('no role'), { code: 'norole' }); }
+      if (!allowed(m)) { await sb.auth.signOut(); userId = null; me = null; take({}); throw Object.assign(new Error('no access'), { code: 'norole' }); }
       return m;
     },
     async signOut() { await sb.auth.signOut(); userId = null; me = null; take({}); },
