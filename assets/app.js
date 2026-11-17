@@ -59,7 +59,8 @@
     if (!state.user) {
       document.title = T.brand;
       // on the database the password is checked for real (the 6-digit second step arrives in B6)
-      window.SakerSignin.verify = S.remote ? (email, pw) => S.signIn(email, pw).then(m => { applyMe(m); return m; }) : null;
+      window.SakerSignin.verify = S.remote ? (email, pw) => S.signIn(email, pw).then(r => { if (!(r && r.need)) applyMe(r); return r; }) : null;
+      window.SakerSignin.verifyCode = S.remote ? (fid, code) => S.verifyCode(fid, code).then(m => { applyMe(m); return m; }) : null;
       window.SakerSignin.show(T, email => arrive(() => { state.user = email; if (!S.remote) session.set(email); window.SakerSignin.hide(); render(); }));
       return;
     }

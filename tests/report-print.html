@@ -8,7 +8,7 @@
   (async () => {
     const lang = new URLSearchParams(location.search).get('lang') || 'ar';
     sessionStorage.setItem('saker.session', 'qa@demo.saker');
-    localStorage.setItem('saker.role', 'boss'); localStorage.setItem('saker.lang', lang); localStorage.setItem('saker.look', '2');
+    localStorage.setItem('saker.backend', 'demo'); localStorage.setItem('saker.role', 'boss'); localStorage.setItem('saker.lang', lang); localStorage.setItem('saker.look', '2');
     const html = (await (await fetch('../index.html', { cache: 'no-store' })).text())
       .replace('</body>', '<script>setTimeout(() => document.getElementById("export").click(), 800)<\/script></body>');
     history.replaceState(null, '', '../index.html');      // stand at the app's own URL: every relative path (pdf.js too) resolves as in the app

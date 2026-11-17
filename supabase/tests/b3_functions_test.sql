@@ -86,7 +86,7 @@ begin
         if who = 'anon' then
           perform set_config('request.jwt.claims', '{"role":"anon"}', true); set local role anon;
         elsif who <> '' then
-          perform set_config('request.jwt.claims', json_build_object('sub', case who when 'admin' then ua when 'boss' then ub else us end, 'role', 'authenticated')::text, true);
+          perform set_config('request.jwt.claims', json_build_object('sub', case who when 'admin' then ua when 'boss' then ub else us end, 'role', 'authenticated', 'aal', 'aal2')::text, true);
           set local role authenticated;
         end if;
         set constraints all deferred;

@@ -22,7 +22,15 @@
         </span>`;
       setTimeout(() => f.querySelector(st.email ? '[name=password]' : '[name=email]').focus(), 60);
     } else {
-      f.innerHTML = `
+      // first sign-in on the database (B6): link an authenticator app — scan the QR (or type the key), then its code
+      const link = st.step === 'enroll' && st.mfa ? `
+        <div class="si-enroll">
+          <p class="si-enroll-title">${esc(S.enrollTitle)}</p>
+          <img class="si-qr" src="${esc(st.mfa.qr)}" alt="${esc(S.enrollTitle)}">
+          <p class="si-enroll-sub">${esc(S.enrollSub)}</p>
+          <p class="si-secret"><span>${esc(S.secretLabel)}</span> <code dir="ltr">${esc(st.mfa.secret)}</code></p>
+        </div>` : '';
+      f.innerHTML = `${link}
         <span class="si-wrap">
           <input class="si-input si-code" name="code" dir="ltr" inputmode="numeric" autocomplete="one-time-code"
                  maxlength="6" placeholder="${esc(S.codeTitle)}" aria-label="${esc(S.codeSub)}">
@@ -46,13 +54,21 @@
       st.email = f.email.value.trim();
       if (root.SakerSignin.verify) {                          // the database (B5): a real account, checked now
         const pw = f.password.value; f.classList.add('busy');
-        root.SakerSignin.verify(st.email, pw).then(() => { st.leaving = true; st.done(st.email); },
+        root.SakerSignin.verify(st.email, pw).then(r => {
+          if (r && r.need) { st.mfa = r; st.step = r.need === 'enroll' ? 'enroll' : 'code'; f.classList.remove('busy'); draw(); return; }
+          st.leaving = true; st.done(st.email); },
           () => { f.classList.remove('busy'); flag(f.password, true); f.password.value = ''; });
         return;
       }
       st.step = 'code'; draw();
     } else {
       if (flag(f.code, !/^\d{6}$/.test(f.code.value))) return;
+      if (st.mfa && root.SakerSignin.verifyCode) {              // the database: the code is checked for real
+        const code = f.code.value; f.classList.add('busy');
+        root.SakerSignin.verifyCode(st.mfa.factorId, code).then(() => { st.step = 'creds'; st.mfa = null; st.leaving = true; st.done(st.email); },
+          () => { f.classList.remove('busy'); flag(f.code, true); f.code.value = ''; });
+        return;
+      }
       st.step = 'creds'; st.leaving = true;
       st.done(st.email);
     }

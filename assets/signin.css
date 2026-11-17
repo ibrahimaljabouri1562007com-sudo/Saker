@@ -91,3 +91,13 @@ html[lang="en"] .si-input::placeholder { font-family: var(--font-en); text-align
   .signin *, .signin { animation: none !important; }
   .si-arc-line { stroke-dashoffset: 0; } .si-tick { opacity: 0.26; }
 }
+
+/* B6 (2026-11-17): linking an authenticator app — the QR on a white card (scanners need contrast), the key below it */
+.si-enroll { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; color: var(--text-2);
+  padding: 14px 16px; border-radius: 14px; background: color-mix(in srgb, var(--bg) 78%, transparent); backdrop-filter: blur(6px); }
+.si-enroll-title { margin: 0; font-size: 15px; color: var(--text); }
+.si-qr { width: 156px; height: 156px; padding: 8px; border-radius: 10px; background: var(--paper); }
+.si-enroll-sub { margin: 0; font-size: 12.5px; line-height: 1.6; max-width: 340px; }
+.si-secret { margin: 0; font-size: 11.5px; }
+.si-secret code { font-family: var(--font-en); letter-spacing: 0.06em; color: var(--text); user-select: all; word-break: break-all; }
+.si-form.busy { opacity: 0.6; pointer-events: none; }

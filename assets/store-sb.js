@@ -13,9 +13,9 @@
   try {
     const q = new URLSearchParams(location.search).get('backend');
     if (q === 'sb' || q === 'demo') localStorage.setItem('saker.backend', q);
-    pick = localStorage.getItem('saker.backend') || 'demo';
+    pick = localStorage.getItem('saker.backend') || 'sb';        // the database is the default since B5 (2026-11-17)
   } catch (e) { /* private mode: demo */ }
-  if (pick !== 'sb' || !root.supabase) return;                // the demo store keeps the stage
+  if (pick !== 'sb' || !root.supabase) return;                // ?backend=demo (or no client): the demo store keeps the stage
 
   const URL = 'https://ayrijizubulczzympslg.supabase.co';
   const KEY = 'sb_publishable_nh5rSbaoQrrL8NIHmCjMQQ_-vIz3p-l'; // public by design (a browser key); the database's rules protect the data
@@ -42,6 +42,21 @@
   }
   // a usable account = a role that opens a view ('none' = no access, set in the dashboard)
   const allowed = m => !!m && (m.role === 'admin' || m.role === 'boss');
+  // the second step (B6): after the password, the account's 6-digit code from an authenticator app (TOTP).
+  //   a linked phone → ask for its code · no phone yet → link one now (QR + key), its first code proves it
+  async function mfaStep() {
+    const { data: lvl, error } = await sb.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (error) throw fail(error);
+    if (lvl.currentLevel === 'aal2') return null;
+    const { data: f, error: e2 } = await sb.auth.mfa.listFactors();
+    if (e2) throw fail(e2);
+    const linked = (f.totp || []).find(x => x.status === 'verified');
+    if (linked) return { need: 'code', factorId: linked.id };
+    for (const x of (f.all || []).filter(x => x.factor_type === 'totp' && x.status !== 'verified')) await sb.auth.mfa.unenroll({ factorId: x.id });
+    const { data: en, error: e3 } = await sb.auth.mfa.enroll({ factorType: 'totp', friendlyName: 'صقر · ' + new Date().toISOString().slice(0, 10) });
+    if (e3) throw fail(e3);
+    return { need: 'enroll', factorId: en.id, qr: en.totp.qr_code, secret: en.totp.secret };
+  }
   const fail = e => Object.assign(new Error(String((e && e.message) || e).replace(/^صقر:\s*/, '')), { code: e && e.code });
 
   // ── writing: one function, then the fresh snapshot ──
@@ -107,12 +122,24 @@
       const { data } = await sb.auth.getSession();
       userId = data.session ? data.session.user.id : null;
       if (!userId) return null;
+      // a session that never passed the code (e.g. a reload mid-sign-in) is not kept: sign in again
+      const { data: lvl } = await sb.auth.mfa.getAuthenticatorAssuranceLevel();
+      if (!lvl || lvl.currentLevel !== 'aal2') { await sb.auth.signOut(); userId = null; return null; }
       try { const m = await load(); return allowed(m) ? m : null; } catch (e) { return null; }
     })(),
     async signIn(email, password) {
       const { data, error } = await sb.auth.signInWithPassword({ email: String(email).trim(), password });
       if (error) throw fail(error);
       userId = data.user.id;
+      const m = await load();
+      if (!allowed(m)) { await sb.auth.signOut(); userId = null; me = null; take({}); throw Object.assign(new Error('no access'), { code: 'norole' }); }
+      const step = await mfaStep();                            // {need:'code'|'enroll', …} — or null when already done
+      if (step) return step;
+      return await load();
+    },
+    async verifyCode(factorId, code) {                         // the 6 digits: accepted → the session is complete (aal2)
+      const { error } = await sb.auth.mfa.challengeAndVerify({ factorId, code: String(code) });
+      if (error) throw fail(error);
       const m = await load();
       if (!allowed(m)) { await sb.auth.signOut(); userId = null; me = null; take({}); throw Object.assign(new Error('no access'), { code: 'norole' }); }
       return m;
