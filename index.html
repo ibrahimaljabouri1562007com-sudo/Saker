@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" data-look="2">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -60,16 +60,13 @@
   })();
   </script>
   <!-- posters:end -->
-  <link rel="stylesheet" href="assets/tokens.css?v=122">
-  <link rel="stylesheet" href="assets/app.css?v=122">
-  <link rel="stylesheet" href="assets/boss.css?v=122">
-  <link rel="stylesheet" href="assets/admin.css?v=122">
-  <link rel="stylesheet" href="assets/signin.css?v=122">
-  <link rel="stylesheet" href="assets/look2.css?v=122">
-  <link rel="stylesheet" href="assets/report.css?v=122">
-  <script>/* Look v2 (2026-11-17): ?look=2 / ?look=1 or the «v2» button; remembered, applied before the first paint */
-    try { var lk = new URLSearchParams(location.search).get('look'); if (lk) localStorage.setItem('saker.look', lk);
-          if (localStorage.getItem('saker.look') === '2') document.documentElement.setAttribute('data-look', '2'); } catch (e) {}</script>
+  <link rel="stylesheet" href="assets/tokens.css?v=124">
+  <link rel="stylesheet" href="assets/app.css?v=124">
+  <link rel="stylesheet" href="assets/boss.css?v=124">
+  <link rel="stylesheet" href="assets/admin.css?v=124">
+  <link rel="stylesheet" href="assets/signin.css?v=124">
+  <link rel="stylesheet" href="assets/look2.css?v=124">
+  <link rel="stylesheet" href="assets/report.css?v=124">
 </head>
 <body>
   <!-- Look v2: the sign-in's landscape continues behind the Boss view, softened once (assets/app.js paintScene) -->
@@ -87,7 +84,6 @@
         <button type="button" id="role-boss"></button><button type="button" id="role-admin"></button>
       </div>
       <button type="button" id="export" class="icon-btn export-btn" hidden><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5h5l3 3v8H4z M9 2.5v3h3 M8 7v4.6 M6.1 9.8L8 11.7l1.9-1.9"/></svg></button>
-      <button type="button" id="look" class="lang-btn look-btn" title="Look v2">v2</button>
       <button type="button" id="lang" class="lang-btn"></button>
       <button type="button" id="signout" class="icon-btn" aria-label=""><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 2.5H3v11h3M10.5 5l3 3-3 3M13.5 8H6.5"/></svg></button>
     </div>
@@ -151,19 +147,19 @@
     </symbol>
   </svg>
 
-  <script src="data/demo.js?v=122"></script>
-  <script src="assets/calc.js?v=122"></script>
-  <script src="assets/store.js?v=122"></script>
+  <script src="data/demo.js?v=124"></script>
+  <script src="assets/calc.js?v=124"></script>
+  <script src="assets/store.js?v=124"></script>
   <!-- B5 (2026-11-17): the database store replaces the demo one only when ?backend=sb (remembered); if the client
        cannot load, the demo store simply stays -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-  <script src="assets/store-sb.js?v=122"></script>
-  <script src="assets/i18n.js?v=122"></script>
-  <script src="assets/viewer.js?v=122"></script>
-  <script src="assets/terrain.js?v=122"></script>
-  <script src="assets/signin.js?v=122"></script>
-  <script src="assets/admin.js?v=122"></script>
-  <script src="assets/report.js?v=122"></script>
-  <script src="assets/app.js?v=122"></script>
+  <script src="assets/store-sb.js?v=124"></script>
+  <script src="assets/i18n.js?v=124"></script>
+  <script src="assets/viewer.js?v=124"></script>
+  <script src="assets/terrain.js?v=124"></script>
+  <script src="assets/signin.js?v=124"></script>
+  <script src="assets/admin.js?v=124"></script>
+  <script src="assets/report.js?v=124"></script>
+  <script src="assets/app.js?v=124"></script>
 </body>
 </html>

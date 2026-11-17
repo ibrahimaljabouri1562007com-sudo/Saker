@@ -239,7 +239,9 @@ viewer). **Fake firms and dummy PDFs only** until all three locks are on.
   the bird in its lower half); two composited masks left faint box edges → one mask.
 - 2026-11-17 · **Look v2 — the theme check, Boss first** (Ibrahim: "raise it up — modern, a professional touch, not
   gold"; BUILT as a switchable layer, v95, awaiting his choice). `assets/look2.css`, active only on `<html data-look="2">`
-  (the «v2» button in the bar or `?look=2` / `?look=1`; remembered). No layout, column, order or click changes. Depth:
+  (the «v2» button in the bar or `?look=2` / `?look=1`; remembered). **2026-11-18: Ibrahim chose v2 — it is now the only
+  look** (`index.html` sets `data-look="2"`; the switch, the «v2» button and `?look=` are removed, v124). Possible later
+  tidy-up: fold `look2.css` into the base styles (no visible change). No layout, column, order or click changes. Depth:
   a deeper ink base, one soft light behind the Sky, a fine grain, the sign-in landscape (`brand/scene-horizon.webp`,
   unused until now) as a soft horizon under the three words. Presence: the falcon at 36px + the generated wordmark
   (`brand/saker-wordmark.svg` as a mask — never re-traced), a translucent bar with a hairline, one segmented role switch,

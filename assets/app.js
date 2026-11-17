@@ -79,7 +79,6 @@
     $('#role-boss').classList.toggle('on', state.role === 'boss');
     $('#role-admin').classList.toggle('on', state.role === 'admin');
     $('#demo-tag').textContent = T.demo;
-    $('#look').classList.toggle('on', document.documentElement.getAttribute('data-look') === '2');
     $('#signout').setAttribute('aria-label', T.si.signOut);
     $('#signout').title = T.si.signOut;
     $('#export').hidden = state.role !== 'boss';                   // the report is the Boss's view on paper
@@ -251,6 +250,7 @@
   // live blur on every frame. Signing in becomes an arrival: the falcon flies from the sign-in into the bar (a view
   // transition), the sharp land melts into the soft one, then the bar and the three words settle in. Only once, at
   // the sign-in; respects "reduce motion"; every later visit opens straight in place.
+  // Look v2 is the only look since 2026-11-18 (index.html sets data-look="2"; the v1 switch and its «v2» button are gone)
   const lookOn = () => document.documentElement.getAttribute('data-look') === '2';
   const reduced = () => window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let sceneKey = '';
@@ -430,13 +430,6 @@
     if (el.id === 'prev' || el.id === 'next') {
       const k = state.y * 12 + (state.m - 1) + (el.id === 'next' ? 1 : -1);
       return setMonth(Math.floor(k / 12), (k % 12) + 1);
-    }
-    if (el.id === 'look') {                                     // Look v2 on / off (compare the two; remembered)
-      const on = document.documentElement.getAttribute('data-look') !== '2';
-      if (on) document.documentElement.setAttribute('data-look', '2'); else document.documentElement.removeAttribute('data-look');
-      if (on) { sceneKey = ''; paintScene(); }
-      try { localStorage.setItem('saker.look', on ? '2' : '1'); } catch (e) { /* private mode */ }
-      el.classList.toggle('on', on); return;
     }
     if (el.id === 'export') return exportReport();
     if (el.id === 'signout') { if (S.remote) S.signOut(); state.user = null; session.set(null); state.details = false; state.open = null; V.close(); return render(); }

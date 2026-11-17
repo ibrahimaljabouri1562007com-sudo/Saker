@@ -8,7 +8,6 @@
    Colours are tokens (--lk-*); the sign-in screen is untouched (scoped to body:not(.signing)). */
 
 .bar-word { display: none; }                                       /* the wordmark lockup exists only in Look v2 */
-.look-btn.on { background: var(--surface-3); color: var(--text); }
 
 html[data-look="2"] body:not(.signing) {
   --lk-top: #16253A;  --lk-mid: #111D2F;  --lk-bot: #0C1625;
