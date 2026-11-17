@@ -63,7 +63,11 @@
       window.SakerSignin.show(T, email => arrive(() => { state.user = email; if (!S.remote) session.set(email); window.SakerSignin.hide(); render(); }));
       return;
     }
-    document.body.classList.toggle('is-boss-account', !!(S.remote && S.me && S.me.role === 'boss'));
+    // a Boss account (on the database) is ALWAYS the Boss view: no build switch, no Admin side — even if a click tried
+    document.documentElement.classList.remove('boot-signin');     // the app is showing: the boot-time sign-in hint is over
+    const bossAccount = !!(S.remote && S.me && S.me.role === 'boss');
+    document.body.classList.toggle('is-boss-account', bossAccount);
+    if (bossAccount && state.role !== 'boss') { state.role = 'boss'; document.body.dataset.role = 'boss'; }
     document.title = `${T.brand} · ${monthLabel()}`;
     $('#brand-name').textContent = state.lang === 'ar' ? 'صقر' : 'SAKER';
     $('#lang').textContent = state.lang === 'ar' ? 'EN' : 'ع';
