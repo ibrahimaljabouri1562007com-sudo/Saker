@@ -107,6 +107,11 @@ Worked example (Firm A, viewing November; Sep and Oct paid in November):
     public address + key, so whoever owns an account's inbox can take the account. 2026-11-17: the test Boss account was
     moved from a made-up Gmail address to `boss.test@example.com` (same account, same password, role boss) ✔ · the real
     Boss later = his own inbox · the strongest lock = the 6-digit code required BY THE DATABASE (B6).
+  - ☐ **Disconnect Claude's «Supabase Saker» connector (or replace it with a read-only one)** before real data: it has
+    full database access, so it could technically read the sign-in tables (incl. each phone's TOTP secret). Never used
+    for that — but a lock is only as strong as every key holder. (Ibrahim, 2026-11-17)
+  - The way in = 3 layers: ① Cloudflare Access (the page) → ② password → ③ 6-digit code; ② and ③ are also enforced
+    on a direct call to Supabase (the page can be skipped, the database cannot), with the guard + vault behind them.
 
 ---
 
