@@ -1,0 +1,17 @@
+<!doctype html>
+<!-- QA harness (2026-11-17): the real app, signed in with a demo session, opens the report — so headless Chrome can print
+     the actual PDF:  chrome --headless=new --no-pdf-header-footer --virtual-time-budget=20000
+                        --print-to-pdf=out.pdf http://localhost:5757/Projects/Saker/tests/report-print.html[?lang=en]
+     Demo data only (a fresh headless profile has no Admin rows). Nothing here is part of the app. -->
+<meta charset="utf-8">
+<script>
+  (async () => {
+    const lang = new URLSearchParams(location.search).get('lang') || 'ar';
+    sessionStorage.setItem('saker.session', 'qa@demo.saker');
+    localStorage.setItem('saker.role', 'boss'); localStorage.setItem('saker.lang', lang); localStorage.setItem('saker.look', '2');
+    const html = (await (await fetch('../index.html', { cache: 'no-store' })).text())
+      .replace('</body>', '<script>setTimeout(() => document.getElementById("export").click(), 800)<\/script></body>');
+    history.replaceState(null, '', '../index.html');      // stand at the app's own URL: every relative path (pdf.js too) resolves as in the app
+    document.open(); document.write(html); document.close();
+  })();
+</script>

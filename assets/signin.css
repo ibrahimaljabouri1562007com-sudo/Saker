@@ -1,0 +1,93 @@
+/* صقر sign-in — its own stylesheet (loaded after app.css, so these rules win).
+   The logo and two rounded fields, nothing else. The ground is a 3D terrain (terrain.js) drawn at the
+   screen's resolution; its horizon places the logo, the dome and the fields through the CSS variables
+   --logo-w / --logo-top / --form-top / --fog-top that signin.js sets. */
+body.signing .bar, body.signing main, .boot-signin .bar, .boot-signin main { display: none; }
+.boot-signin, .boot-signin body { background: #050B14; }
+.signin {
+  position: relative; min-height: 100vh; min-height: 100svh; overflow: hidden; isolation: isolate;
+  display: block; background: #050B14;
+}
+/* Loading, the pro way — every layer is the SAME scene, so each step only sharpens, never swaps:
+   1. first paint: a tiny blurred placeholder (--si-lqip, inlined + picked in index.html's <head>);
+   2. the poster for this screen shape (preloaded at high priority) fades in over it — or, on a repeat
+      visit, this device's own remembered frame, already sharp;
+   3. the live land fades in over that. Not signed in → the sign-in is shown from the very first paint. */
+.boot-signin #signin[hidden] { display: block; }
+#signin:not(.placed) .si-stage, #signin:not(.placed) .si-dome { visibility: hidden; }   /* logo/fields wait for their place */
+.si-ground { position: absolute; inset: 0; z-index: -1; overflow: hidden; animation: none; }   /* overrides an old fade in app.css */
+.si-ground::before { content: ''; position: absolute; inset: -3%; pointer-events: none;      /* width-scaled, horizon on horizon */
+  background: var(--si-lqip, none) 50% var(--si-lqip-y, 64%) / 100% auto no-repeat; filter: blur(20px); }
+.si-ground canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+#si-terrain { opacity: 0; transition: opacity 500ms ease; }
+.si-ground.has-still #si-terrain { transition-duration: 200ms; }   /* over an identical picture: just swap quietly */
+#si-terrain.ready { opacity: 1; }
+.si-ground img.si-still { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 100%; filter: none;
+  transition: opacity 260ms ease; }   /* identical to the live frame: no filter (app.css had one) */
+
+/* fog: two soft banks drifting slowly along the horizon */
+.si-fog { position: absolute; inset: auto -20%; top: var(--fog-top, 55%); height: 26%; pointer-events: none; mix-blend-mode: screen; }
+.si-fog i { position: absolute; border-radius: 50%; filter: blur(30px);
+  background: radial-gradient(closest-side, rgba(160, 188, 220, 0.20), rgba(160, 188, 220, 0)); }
+.si-fog i:first-child { width: 70%; height: 55%; left: 0; top: 18%; animation: si-drift 64s ease-in-out infinite alternate; }
+.si-fog i:last-child { width: 60%; height: 45%; left: 40%; top: 36%; animation: si-drift 86s ease-in-out -20s infinite alternate-reverse; opacity: 0.8; }
+
+/* the horizon dome */
+.si-dome { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; overflow: visible; }
+.si-dome path { fill: none; }
+.si-arc-line { stroke: var(--silver); stroke-width: 1; opacity: 0.18; stroke-dasharray: 1; stroke-dashoffset: 1;
+  animation: si-draw 900ms cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+.si-arc-sweep { stroke: var(--silver); stroke-width: 1.5; opacity: 0; stroke-dasharray: 0.06 0.94; stroke-dashoffset: 0.06;
+  animation: si-sweep 9s ease-in-out 2.2s infinite; }
+.si-tick { stroke: var(--silver); stroke-width: 1; opacity: 0; animation: si-fade-to 500ms ease-out 0.5s forwards; --to: 0.26; }
+
+/* logo and fields, placed from the horizon */
+.si-stage { position: absolute; inset: 0; width: auto; padding: 0; display: block; }
+.si-emblem { position: absolute; left: 0; right: 0; margin: 0 auto; padding: 0; display: block;
+  top: var(--logo-top, 18%); width: var(--logo-w, 300px); }
+.si-mark { display: block; width: 100%; height: auto; color: var(--silver);
+  /* the top-right light shaft reaches the falcon: a soft glow from that side that breathes with it (--beam, 0…1, set by terrain.js) */
+  filter: drop-shadow(0 2px 18px rgba(0, 0, 0, 0.35))
+          drop-shadow(-4px 4px 16px rgba(196, 208, 224, calc(0.08 + 0.22 * var(--beam, 0))))
+          brightness(calc(1 + 0.12 * var(--beam, 0)));
+  animation: si-rise-mark 380ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.si-mark path { fill: url(#silver); }
+.si-form { position: absolute; left: 0; right: 0; margin: 0 auto; top: var(--form-top, 60%); width: min(360px, calc(100% - 40px));
+  display: flex; flex-direction: column; gap: 16px; animation: si-rise 380ms cubic-bezier(0.2, 0.7, 0.2, 1) 60ms both; }
+.si-form.step-in > * { animation: si-rise 360ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+
+/* the two fields: rounded, quiet, silver hairline; the arrow inside the last one moves on */
+.si-wrap { position: relative; display: block; }
+.si-input {
+  width: 100%; height: 52px; padding: 0 20px; font: inherit; font-size: 16px; color: var(--text);
+  background: rgba(8, 16, 27, 0.76); border: 1px solid rgba(201, 207, 216, 0.30); border-radius: 14px; outline: none;
+  backdrop-filter: blur(8px); transition: border-color 160ms, box-shadow 160ms, background 160ms;
+}
+html[lang="en"] .si-input { font-family: var(--font-en); }
+.si-input::placeholder { color: var(--text-3); font-family: var(--font-ar); opacity: 1; text-align: right; }
+html[lang="en"] .si-input::placeholder { font-family: var(--font-en); text-align: left; }
+.si-input:focus { border-color: rgba(201, 207, 216, 0.6); background: rgba(8, 16, 27, 0.9); box-shadow: 0 0 0 4px rgba(201, 207, 216, 0.08); }
+.si-input.bad { border-color: var(--st-late); box-shadow: 0 0 0 4px rgba(222, 144, 136, 0.10); }
+.si-wrap .si-input { padding-right: 58px; padding-left: 20px; }
+[dir="rtl"] .si-wrap .si-input { padding-right: 20px; padding-left: 58px; }
+.si-go { position: absolute; top: 7px; right: 7px; left: auto; width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center;
+  color: var(--bg); background: var(--silver); transition: background 150ms, transform 150ms; }
+[dir="rtl"] .si-go { right: auto; left: 7px; }
+.si-go:hover { background: #E3E7ED; }
+.si-go:active { transform: scale(0.96); }
+.si-go svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.si-code { font-family: var(--font-en); font-size: 20px; letter-spacing: 0.5em; text-align: center; }
+.si-code::placeholder { letter-spacing: 0; font-size: 16px; text-align: center !important; }
+
+@keyframes si-draw { to { stroke-dashoffset: 0; } }
+@keyframes si-sweep { 0% { opacity: 0; stroke-dashoffset: 0.06; } 12% { opacity: 0.28; } 55% { opacity: 0.28; } 70%, 100% { opacity: 0; stroke-dashoffset: -0.94; } }
+@keyframes si-fade { from { opacity: 0; } }
+@keyframes si-fade-to { to { opacity: var(--to); } }
+@keyframes si-rise { from { opacity: 0; transform: translateY(10px); } }
+@keyframes si-rise-mark { from { opacity: 0; transform: translateY(6px) scale(0.985); } }
+@keyframes si-drift { from { transform: translateX(-12%); } to { transform: translateX(14%); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .signin *, .signin { animation: none !important; }
+  .si-arc-line { stroke-dashoffset: 0; } .si-tick { opacity: 0.26; }
+}

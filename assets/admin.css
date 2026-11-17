@@ -1,0 +1,578 @@
+/* صقر · Admin «إضافة» (slice 1). Same tokens and calm as the Boss window (boss.css); colours only from tokens. */
+
+/* ── shared pieces ── */
+.adm { padding-top: var(--s-6); }
+.adm-top { display: flex; align-items: center; justify-content: space-between; gap: var(--s-4); margin-bottom: var(--s-6); }
+.adm h1 { margin: 0; font-size: 26px; font-weight: 600; color: var(--text); }
+.adm-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 0 18px;
+  border: 1px solid var(--line-2); border-radius: 10px; background: var(--surface); color: var(--text);
+  font-size: 16px; font-weight: 500; transition: background 140ms, border-color 140ms; white-space: nowrap; }
+.adm-btn:hover { background: var(--surface-2); border-color: var(--silver); }
+.adm-btn svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.adm-btn.primary { background: var(--silver); color: var(--bg); border-color: var(--silver); font-weight: 600; }
+.adm-btn.primary:hover { background: var(--text); }
+.adm-btn:disabled { opacity: 0.55; cursor: default; }
+.adm-btn.small { min-height: 34px; padding: 0 12px; font-size: 14px; border-radius: 8px; }
+.adm-btn.wide { width: 100%; }
+.adm-btn.danger { color: var(--st-late); border-color: rgba(245, 167, 156, 0.4); background: none; }
+.adm-btn.danger:hover { background: rgba(245, 167, 156, 0.12); border-color: var(--st-late); }
+.adm-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: var(--s-4); }
+.adm-back { display: inline-flex; align-items: center; gap: 6px; font-size: 15px; color: var(--text-2); padding: 4px 8px; margin: 0 -8px var(--s-3); border-radius: 8px; }
+.adm-back:hover { color: var(--text); background: var(--surface); }
+.adm-back svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+[dir="rtl"] .adm-back svg { transform: scaleX(-1); }
+.adm-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; padding: 3px 10px; border-radius: 999px;
+  color: var(--text-2); background: rgba(221, 228, 237, 0.08); box-shadow: inset 0 0 0 1px var(--line-2); white-space: nowrap; }
+.adm-chip::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--text-3); }
+.adm-chip.draft { color: var(--st-partial); background: rgba(242, 201, 76, 0.10); box-shadow: inset 0 0 0 1px rgba(242, 201, 76, 0.35); }
+.adm-chip.draft::before { background: var(--st-partial); }
+.adm-chip.active { color: var(--st-paid); background: rgba(138, 214, 172, 0.10); box-shadow: inset 0 0 0 1px rgba(138, 214, 172, 0.35); }
+.adm-chip.active::before { background: var(--st-paid); }
+.adm-empty { color: var(--text-2); font-size: 16px; padding: var(--s-5) 0; margin: 0; }
+.adm-empty.small { padding: var(--s-2) 0; font-size: 15px; }
+
+/* ── home: the lists ── */
+.adm-h2 { display: flex; align-items: baseline; flex-wrap: wrap; gap: 10px; margin: var(--s-5) 0 var(--s-3); font-size: 17px; font-weight: 600; color: var(--text); }
+.adm-h2 b { font-weight: 500; color: var(--text-3); }
+.adm-h2 small { font-size: 13px; font-weight: 400; color: var(--text-3); }
+.adm-list { list-style: none; margin: 0; padding: 0; background: var(--bg-2); border: 1px solid var(--line-2); border-radius: 14px; overflow: hidden; }
+.adm-list li + li { border-top: 1px solid var(--line); }
+.adm-item { width: 100%; display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.2fr) minmax(0, 1.6fr) auto; align-items: center;
+  gap: var(--s-4); padding: 16px 20px; text-align: start; }
+.adm-item:hover { background: var(--surface); }
+.adm-ref { font-family: var(--font-en); font-size: 16px; font-weight: 600; letter-spacing: 0.02em; direction: ltr; text-align: start; }
+.adm-firm { font-size: 17px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.adm-meta { font-size: 15px; color: var(--text-2); }
+.adm-meta b { font-family: var(--font-en); font-weight: 500; color: var(--text); }
+
+/* ── new contract form ── */
+.adm-card { max-width: 640px; background: var(--bg-2); border: 1px solid var(--line-2); border-radius: 16px; padding: var(--s-6);
+  box-shadow: 0 18px 40px rgba(6, 12, 22, 0.25); }
+.adm-sub { margin: 6px 0 var(--s-5); color: var(--text-2); font-size: 15px; }
+.fld { display: flex; flex-direction: column; gap: 6px; margin-bottom: var(--s-4); min-width: 0; }
+.fld-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-4); }
+.fld-label { font-size: 14px; font-weight: 500; color: var(--text-2); }
+.fld-label i { font-style: normal; font-weight: 400; color: var(--text-3); font-size: 13px; }
+.fld-in { width: 100%; height: 44px; padding: 0 14px; font: inherit; font-size: 16px; color: var(--text);
+  background: var(--bg); border: 1px solid var(--line-2); border-radius: 10px; outline: none; color-scheme: dark;
+  transition: border-color 140ms, box-shadow 140ms; }
+.fld-in:focus { border-color: var(--silver); box-shadow: 0 0 0 3px rgba(217, 223, 232, 0.12); }
+.fld-in.bad { border-color: var(--st-late); }
+.fld-in.num, .fld-in[type="date"], .fld-in[name="ref"] { font-family: var(--font-en); font-variant-numeric: tabular-nums; }
+[dir="rtl"] .fld-in[dir="ltr"] { text-align: right; }
+.fld-msg { min-height: 0; font-size: 13px; color: var(--text-3); }
+.fld-msg.bad { color: var(--st-late); }
+.fld-msg:empty { display: none; }
+.adm-file { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: var(--s-5);
+  border: 1.5px dashed var(--line-2); border-radius: 12px; color: var(--text-2); cursor: pointer; text-align: center;
+  transition: border-color 140ms, background 140ms; }
+.adm-file:hover, .adm-file.over { border-color: var(--silver); background: var(--surface); color: var(--text); }
+.adm-file.bad { border-color: var(--st-late); }
+.adm-file > svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.3; }
+.adm-file small { color: var(--text-3); font-size: 13px; }
+.adm-file.has { flex-direction: row; justify-content: flex-start; gap: 12px; padding: 12px 16px; border-style: solid; cursor: default; background: var(--bg); }
+.adm-file.has:hover { background: var(--bg); color: var(--text-2); }
+.adm-file-ico svg { width: 22px; height: 22px; fill: none; stroke: var(--silver); stroke-width: 1.3; display: block; }
+.adm-file-name { font-family: var(--font-en); color: var(--text); font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.adm-file-meta { color: var(--text-3); font-size: 13px; white-space: nowrap; }
+.adm-link { margin-inline-start: auto; color: var(--text); font-size: 14px; text-decoration: underline; text-underline-offset: 3px;
+  text-decoration-color: var(--line-2); cursor: pointer; white-space: nowrap; }
+
+/* ── the workspace: schedule (left) · contract (right), each scrolling on its own ── */
+body.ws-on main { max-width: 1560px; padding-bottom: var(--s-4); }
+.ws { display: grid; grid-template-columns: minmax(330px, 400px) minmax(0, 1fr); gap: var(--s-4);
+  height: calc(100vh - 60px - 32px); height: calc(100svh - 60px - 32px); padding-top: var(--s-4); }
+.ws-side { display: flex; flex-direction: column; min-height: 0; overflow-y: auto; padding: var(--s-4) var(--s-4) 0;
+  background: var(--bg-2); border: 1px solid var(--line-2); border-radius: 14px; }
+.ws-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; padding-bottom: var(--s-4); border-bottom: 1px solid var(--line); }
+.ws-ref { font-family: var(--font-en); font-size: 22px; font-weight: 600; letter-spacing: 0.02em; color: var(--text); flex-basis: 100%; }
+[dir="rtl"] .ws-ref { text-align: right; }
+.ws-firm { font-size: 16px; color: var(--text-2); }
+.ws-done { display: flex; gap: 12px; align-items: flex-start; margin-top: var(--s-4); padding: 12px 14px; border-radius: 10px;
+  background: rgba(138, 214, 172, 0.12); box-shadow: inset 0 0 0 1px rgba(138, 214, 172, 0.4); color: var(--st-paid); }
+.ws-done svg { width: 20px; height: 20px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; margin-top: 2px; }
+.ws-done b { font-size: 16px; } .ws-done p { margin: 2px 0 0; color: var(--text); font-size: 14px; }
+.ws-total { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; padding: var(--s-4) 0 var(--s-3); }
+.ws-total-label { font-size: 15px; font-weight: 500; color: var(--text-2); }
+.ws-total-val { font-family: var(--font-en); font-size: 24px; font-weight: 600; color: var(--text); padding: 2px 10px; margin: -2px -10px;
+  border-radius: 8px; border: 1px solid transparent; }
+.ws-total-val:not(:disabled):hover { border-color: var(--line-2); background: var(--surface); }
+.ws-total-none { font-size: 15px; color: var(--text-3); font-style: italic; }
+.ws-total small { flex-basis: 100%; font-size: 12.5px; color: var(--text-3); }
+/* the range counter — Admin only */
+.ws-meter { padding: 12px 14px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); }
+.ws-meter-nums { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 14px; color: var(--text-2); }
+.ws-meter-nums b { font-family: var(--font-en); font-size: 18px; font-weight: 600; color: var(--text); white-space: nowrap; }
+.ws-meter-nums i { font-style: normal; font-weight: 400; color: var(--text-3); font-size: 14px; margin: 0 2px; }
+.ws-bar { height: 6px; margin: 10px 0 8px; border-radius: 3px; background: rgba(214, 224, 238, 0.12); overflow: hidden; direction: ltr; }
+.ws-bar i { display: block; height: 100%; border-radius: 3px; background: var(--silver); transition: width 260ms cubic-bezier(0.2, 0.7, 0.2, 1); }
+.ws-meter-line { display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--text-2); }
+.ws-meter-line b { font-family: var(--font-en); font-weight: 600; }
+.ws-meter-line svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; }
+.m-ok .ws-bar i { background: var(--st-paid); } .m-ok .ws-meter-line { color: var(--st-paid); }
+.m-over .ws-bar i { background: var(--st-late); } .m-over .ws-meter-line { color: var(--st-late); }
+.m-short .ws-meter-line b { color: var(--text); }
+.ws-hint { display: flex; gap: 8px; align-items: flex-start; margin: var(--s-4) 0 0; font-size: 14px; color: var(--text-2); line-height: 1.6; }
+.ws-hint svg { width: 16px; height: 16px; flex: none; margin-top: 3px; fill: none; stroke: currentColor; stroke-width: 1.6; }
+.ws-h3 { display: flex; gap: 8px; align-items: baseline; margin: var(--s-5) 0 var(--s-2); font-size: 15px; font-weight: 600; color: var(--text); }
+.ws-h3 b { font-weight: 500; color: var(--text-3); }
+.ws-list { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line-2); border-radius: 12px; overflow: hidden; }
+.ws-inst { display: flex; align-items: center; background: var(--bg); }
+.ws-inst + .ws-inst { border-top: 1px solid var(--line); }
+.ws-inst.on { background: var(--surface-2); }
+.ws-inst-main { flex: 1; min-width: 0; display: grid; grid-template-columns: 26px auto minmax(0, 1fr); grid-template-areas: "seq date amt" ". note note";
+  align-items: center; gap: 2px 12px; padding: 11px 6px 11px 14px; text-align: start; }
+[dir="rtl"] .ws-inst-main { padding: 11px 14px 11px 6px; }
+.ws-inst-main:hover { background: var(--surface); }
+.ws-seq { grid-area: seq; width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; font-family: var(--font-en);
+  font-size: 13px; font-weight: 600; color: var(--bg); background: var(--hl-line); }
+.ws-date { grid-area: date; font-family: var(--font-en); font-size: 15px; color: var(--text-2); letter-spacing: 0.03em; }
+.ws-amt { grid-area: amt; justify-self: end; font-family: var(--font-en); font-size: 17px; font-weight: 600; color: var(--text); }
+.ws-note { grid-area: note; font-size: 13px; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ws-edit { flex: none; margin-inline-end: 6px; }
+.ws-foot { position: sticky; bottom: 0; margin-top: auto; padding: var(--s-4) 0; background: linear-gradient(transparent, var(--bg-2) 18px); }
+.ws-gate { margin-bottom: 12px; padding: 12px 14px; border-radius: 10px; font-size: 14.5px; line-height: 1.6;
+  background: var(--surface); box-shadow: inset 0 0 0 1px var(--line-2); color: var(--text); }
+.ws-gate p { margin: 0; }
+.ws-gate.bad { background: rgba(196, 43, 43, 0.14); box-shadow: inset 0 0 0 1px rgba(245, 167, 156, 0.5); }
+.ws-gate .ws-gate-fix { margin-top: 6px; color: var(--text-2); }
+.ws-gate .adm-actions { margin-top: 10px; }
+.ws-gate .adm-btn { white-space: normal; text-align: center; min-height: 38px; font-size: 14.5px; }
+
+/* the contract column */
+.ws-doc { display: flex; flex-direction: column; min-height: 0; border: 1px solid var(--line-2); border-radius: 14px; overflow: hidden; background: var(--paper-well); }
+.ws-doc-bar { display: flex; align-items: center; gap: 12px; padding: 8px 14px; min-height: 48px; background: var(--surface); border-bottom: 1px solid var(--line); }
+.ws-doc-name { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-en); font-size: 14.5px; color: var(--text); min-width: 0; }
+.ws-doc-name svg { width: 16px; height: 16px; flex: none; fill: none; stroke: var(--silver); stroke-width: 1.3; }
+.ws-doc-name span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ws-doc-meta { font-size: 13px; color: var(--text-3); white-space: nowrap; }
+.ws-draw { margin-inline-start: auto; display: none; }
+.ws-draw.on { background: var(--silver); color: var(--bg); }
+@media (pointer: coarse) { .ws-draw { display: inline-flex; } }
+.ws-scroll { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 16px 0; }
+.ws-scroll.can-draw .page { cursor: crosshair; user-select: none; -webkit-user-select: none; }
+.ws-scroll.draw-mode .page { touch-action: none; }
+/* the box being drawn, then kept under its form */
+.ws-sel { position: absolute; border: 2px dashed var(--hl-line); background: rgba(78, 125, 178, 0.14); border-radius: 3px; pointer-events: none; }
+.ws-sel.keep { border-style: solid; background: rgba(78, 125, 178, 0.2); }
+/* saved boxes: the total (silver) and each installment (blue, numbered) */
+.ws-mark { position: absolute; padding: 0; border: 2px solid var(--hl-line); background: rgba(78, 125, 178, 0.12); border-radius: 3px; cursor: pointer; }
+div.ws-mark { cursor: default; }
+button.ws-mark:hover { background: rgba(78, 125, 178, 0.24); }
+.ws-mark.is-total { border-color: var(--text-3); background: rgba(140, 152, 169, 0.14); }
+.ws-tag { position: absolute; top: -11px; left: -11px; min-width: 22px; height: 22px; padding: 0 6px; display: grid; place-items: center;
+  border-radius: 11px; font: 600 12px/1 var(--font-en); color: var(--text); background: var(--hl-line); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35); white-space: nowrap; }
+.ws-mark.is-total .ws-tag { background: var(--surface-3); font-family: var(--font-ar); font-weight: 500; }
+/* the clause form, beside its box */
+.ws-pop { position: absolute; z-index: 5; padding: 14px; border-radius: 12px; background: var(--bg-2); border: 1px solid var(--line-2);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45); cursor: default; user-select: text; animation: drop var(--t-slide); }
+.ws-pop .fld { margin-bottom: 10px; }
+.ws-pop .fld-in { height: 40px; font-size: 15px; }
+.ws-pop .adm-actions { margin-top: 4px; gap: 8px; }
+.ws-pop-title { font-size: 15px; font-weight: 600; margin-bottom: 10px; }
+.ws-kind { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 3px; margin-bottom: 12px; border-radius: 9px; background: var(--bg); border: 1px solid var(--line); }
+.ws-kind button { padding: 6px 8px; border-radius: 7px; font-size: 14px; color: var(--text-2); }
+.ws-kind button.on { background: var(--surface-3); color: var(--text); font-weight: 600; }
+
+/* ── narrow: the two columns stack (the Admin works mostly on a computer) ── */
+@media (max-width: 900px) {
+  .ws { grid-template-columns: 1fr; height: auto; }
+  .ws-side { overflow: visible; }
+  .ws-doc { height: 78vh; height: 78svh; }
+  .ws-foot { position: static; }
+}
+@media (max-width: 720px) {
+  .adm-item { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "ref chip" "firm firm" "meta meta"; gap: 4px 12px; padding: 14px 16px; }
+  .adm-ref { grid-area: ref; } .adm-chip { grid-area: chip; } .adm-firm { grid-area: firm; } .adm-meta { grid-area: meta; }
+  .adm-card { padding: var(--s-5) var(--s-4); }
+  .fld-row { grid-template-columns: 1fr; gap: 0; }
+  .adm-top h1 { font-size: 22px; }
+}
+/* a typed date is read back in words under its box (day/month never swapped) */
+.fld-msg.ok { color: var(--text-3); font-size: 12.5px; }
+
+/* ── slice 2: the files beside the contract (tabs + «+ إضافة مرجع»), the include switches, the "where" question ── */
+.ws-doc { position: relative; }
+.ws-tabs { display: flex; align-items: center; gap: 4px; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.ws-tabs::-webkit-scrollbar { display: none; }
+.ws-tab { flex: none; display: inline-flex; align-items: center; gap: 7px; height: 34px; padding: 0 12px; border-radius: 8px;
+  font-size: 14px; color: var(--text-2); border: 1px solid transparent; white-space: nowrap; cursor: pointer; }
+.ws-tab svg { width: 15px; height: 15px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.4; }
+.ws-tab:hover { color: var(--text); background: var(--surface-2); }
+.ws-tab.on { color: var(--text); background: var(--surface-3); font-weight: 600; }
+.ws-tab.add { border: 1px dashed var(--line-2); color: var(--text-2); }
+.ws-tab.add:hover, .ws-tab.add.over { border-color: var(--silver); color: var(--text); background: var(--surface-2); }
+.ws-doc-meta { margin-inline-start: auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.ws-doc-meta span { font-family: var(--font-en); }
+.ws-draw { margin-inline-start: 0; }
+
+.ws-refask { position: absolute; inset: 0; z-index: 10; display: grid; place-items: center; padding: var(--s-4);
+  background: rgba(12, 23, 36, 0.72); backdrop-filter: blur(2px); animation: drop var(--t-slide); }
+.ws-refask-card { width: 100%; max-width: 500px; max-height: 100%; overflow-y: auto; padding: 22px; border-radius: 16px;
+  background: var(--bg-2); border: 1px solid var(--line-2); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5); }
+.ws-refask-card h3 { margin: 0; font-size: 19px; font-weight: 600; color: var(--text); }
+.ws-refask-card .adm-sub { margin: 6px 0 14px; font-size: 14px; line-height: 1.6; }
+.ws-refask-file { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 10px; background: var(--surface);
+  font-size: 14px; color: var(--text); }
+.ws-refask-file svg { width: 15px; height: 15px; flex: none; fill: none; stroke: var(--silver); stroke-width: 1.4; }
+.ws-refask-file span { font-family: var(--font-en); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ws-refask-file small { margin-inline-start: auto; color: var(--text-3); font-size: 13px; white-space: nowrap; }
+.ws-where { display: grid; gap: 6px; margin: 14px 0; }
+.ws-where-opt { display: grid; gap: 2px; padding: 10px 14px; text-align: start; border-radius: 10px; background: var(--bg);
+  border: 1px solid var(--line-2); color: var(--text); }
+.ws-where-opt b { font-size: 15px; font-weight: 600; }
+.ws-where-opt small { font-size: 13px; color: var(--text-3); }
+.ws-where-opt:hover:not(:disabled) { border-color: var(--silver); background: var(--surface); }
+.ws-where-opt.on { border-color: var(--silver); background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--silver); }
+.ws-where-opt:disabled { opacity: 0.45; cursor: not-allowed; }
+.ws-refask-card .fld { margin-bottom: 4px; }
+
+/* the include switches: «المبلغ» «التاريخ» — both on = this box shows both */
+.ws-inc { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 10px; }
+.ws-inc-label { flex-basis: 100%; font-size: 13px; color: var(--text-2); }
+.ws-sw { display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 12px 0 8px; border-radius: 999px;
+  border: 1px solid var(--line-2); font-size: 14px; color: var(--text-2); background: var(--bg); }
+[dir="rtl"] .ws-sw { padding: 0 8px 0 12px; }
+.ws-sw i { position: relative; width: 26px; height: 15px; flex: none; border-radius: 8px; background: var(--surface-3); transition: background var(--t-slide); }
+.ws-sw i::after { content: ''; position: absolute; top: 2px; inset-inline-start: 2px; width: 11px; height: 11px; border-radius: 50%;
+  background: var(--text-3); transition: inset-inline-start var(--t-slide), background var(--t-slide); }
+.ws-sw.on { color: var(--text); border-color: var(--silver); }
+.ws-sw.on i { background: var(--hl-line); }
+.ws-sw.on i::after { inset-inline-start: 13px; background: var(--text); }
+.ws-inc-msg { display: block; margin: -4px 0 10px; }
+.ws-where-line { display: flex; flex-direction: column; gap: 2px; }
+.ws-where-line span { font-size: 12.5px; font-weight: 400; color: var(--text-3); }
+.ws-pop .ws-ta { height: auto; min-height: 76px; padding: 10px 14px; line-height: 1.6; resize: vertical; }
+
+/* a part not highlighted yet (soft: it does not block «إنهاء العقد») */
+.ws-miss { font-style: normal; display: inline-block; margin-inline-end: 6px; padding: 0 6px; border-radius: 6px;
+  border: 1px dashed var(--line-2); color: var(--text-2); font-size: 12px; }
+.ws-tag.words { font-family: var(--font-ar); font-weight: 500; }
+
+/* the references + the contract's notes, under the schedule */
+.ws-refs { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line-2); border-radius: 12px; overflow: hidden; }
+.ws-refs li + li { border-top: 1px solid var(--line); }
+.ws-refitem { width: 100%; display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; grid-template-areas: "ico where n" ". file file";
+  align-items: center; gap: 2px 10px; padding: 10px 14px; text-align: start; background: var(--bg); }
+.ws-refitem:hover { background: var(--surface); }
+.ws-refitem.on { background: var(--surface-2); }
+.ws-refitem svg { grid-area: ico; width: 15px; height: 15px; fill: none; stroke: var(--silver); stroke-width: 1.4; }
+.ws-ref-where { grid-area: where; font-size: 15px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ws-ref-file { grid-area: file; font-family: var(--font-en); font-size: 13px; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: start; }
+.ws-refitem small { grid-area: n; font-size: 12.5px; color: var(--text-3); white-space: nowrap; }
+/* the side panel scrolls as one column: its blocks keep their full height (lists never squeeze to a sliver) */
+.ws-side > * { flex-shrink: 0; }
+/* the doc bar: the tabs come first; the file name gives way when space is short */
+.ws-tabs { flex: 0 1 auto; }
+.ws-doc-meta { flex: 0 3 auto; white-space: nowrap; }
+
+/* ── the file tabs as an editor's tab bar (Ibrahim, 2026-11-12): the contract = the main module; the references =
+   one framed group «المراجع»; the open tab joins the page below it (no bottom edge, a top accent line) ── */
+.ws-doc-bar { align-items: flex-end; padding: 8px 14px 0; border-bottom: 1px solid var(--line-2); }
+.ws-doc-meta, .ws-draw { align-self: center; margin-bottom: 8px; }
+.ws-tabs { align-items: flex-end; gap: 10px; margin-bottom: -1px; }
+.ws-tab { height: 38px; padding: 0 14px; border: 1px solid var(--line); border-bottom: 0; border-radius: 8px 8px 0 0;
+  background: var(--bg-2); color: var(--text-2); }
+.ws-tab:hover { background: var(--surface-2); color: var(--text); }
+.ws-tab.on { background: var(--paper-well); color: var(--text); border-color: var(--line-2); font-weight: 600;
+  box-shadow: inset 0 2px 0 var(--hl-line); position: relative; z-index: 1; }
+.ws-tab.on::after { content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px; background: var(--paper-well); }
+.ws-tab.main { font-weight: 600; color: var(--text); }
+.ws-tab.main svg { stroke: var(--silver); }
+/* the references group: one frame around its tabs, its name first, «+» last */
+.ws-tabgroup { flex: none; display: flex; align-items: flex-end; gap: 3px; padding: 4px 4px 0; border: 1px solid var(--line-2);
+  border-bottom: 0; border-radius: 10px 10px 0 0; background: var(--surface); }
+.ws-tabgroup-label { align-self: center; display: inline-flex; align-items: center; gap: 6px; padding: 0 8px 4px; font-size: 12.5px;
+  color: var(--text-3); white-space: nowrap; }
+.ws-tabgroup-label svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.4; }
+.ws-tabgroup-label b { font-family: var(--font-en); font-weight: 500; color: var(--text-2); }
+.ws-tabgroup .ws-tab { height: 34px; padding: 0 12px; font-size: 13.5px; }
+.ws-tabgroup .ws-tab.add { border: 1px dashed var(--line-2); border-bottom: 0; background: none; }
+.ws-tabgroup .ws-tab.add:hover, .ws-tabgroup .ws-tab.add.over { border-color: var(--silver); background: var(--surface-2); }
+.ws-doc-meta { flex: 0 50 auto; }   /* the file name gives way long before the tabs do */
+.ws-tabs { gap: 8px; }
+.ws-tabgroup-label { padding: 0 6px 4px; }
+.ws-tabs > .ws-tab.add { border-bottom: 0; background: none; }   /* «+ إضافة مرجع» alone, before any reference */
+
+/* ── «إعادة رسم المربع»: a saved box drawn in the wrong place is dragged again (Ibrahim, 2026-11-13) ── */
+.ws-redraw { display: inline-flex; align-items: center; gap: 6px; margin: 0 0 8px; padding: 2px 0; font-size: 13.5px; color: var(--text-2);
+  text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--line-2); }
+.ws-redraw:hover { color: var(--text); text-decoration-color: var(--silver); }
+.ws-redraw svg, .ws-moved svg, .ws-banner svg { width: 14px; height: 14px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.6; }
+.ws-moved { display: flex; align-items: flex-start; gap: 6px; margin: 0 0 8px; line-height: 1.5; }
+.ws-moved svg { margin-top: 3px; }
+.ws-mark.is-old { border-style: dashed; opacity: 0.4; pointer-events: none; }
+.ws-banner { position: absolute; top: 60px; left: 50%; transform: translateX(-50%); z-index: 8; display: flex; align-items: center; gap: 10px;
+  max-width: calc(100% - 32px); padding: 8px 8px 8px 14px; border-radius: 12px; background: var(--bg-2); border: 1px solid var(--silver);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45); font-size: 14px; color: var(--text); animation: drop var(--t-slide); }
+[dir="rtl"].ws-banner { padding: 8px 14px 8px 8px; }
+/* centred without a transform (the slide-in animation owns `transform`) */
+.ws-banner { left: 16px; right: 16px; transform: none; width: fit-content; margin: 0 auto; }
+
+/* ── the Admin's home = search (Ibrahim, 2026-11-13): text + month + firm; contracts with drawers like the Boss's ── */
+.srch-bar { display: grid; grid-template-columns: minmax(0, 1fr) 210px 210px; gap: 10px; }
+.srch-box, .srch-sel { position: relative; display: block; min-width: 0; }
+.srch-box svg, .srch-sel svg { position: absolute; top: 50%; inset-inline-start: 14px; width: 16px; height: 16px; margin-top: -8px;
+  fill: none; stroke: var(--text-3); stroke-width: 1.5; pointer-events: none; }
+.srch-box input, .srch-sel select { width: 100%; height: 46px; padding: 0 14px; padding-inline-start: 40px; font: inherit; font-size: 15.5px;
+  color: var(--text); background: var(--bg-2); border: 1px solid var(--line-2); border-radius: 12px; outline: none; color-scheme: dark; }
+.srch-box input:focus, .srch-sel select:focus { border-color: var(--silver); box-shadow: 0 0 0 3px rgba(217, 223, 232, 0.12); }
+.srch-box input::placeholder { color: var(--text-3); }
+.srch-sel select { cursor: pointer; }
+.srch-count { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: var(--s-4) 0 var(--s-2); font-size: 14px; color: var(--text-3); }
+.srch-list { list-style: none; margin: 0; padding: 0; background: var(--bg-2); border: 1px solid var(--line-2); border-radius: 14px; overflow: hidden; }
+.srch-item + .srch-item { border-top: 1px solid var(--line); }
+.srch-head { width: 100%; display: grid; grid-template-columns: minmax(110px, auto) minmax(0, 1fr) auto auto 14px; align-items: center; gap: 16px;
+  padding: 15px 20px; text-align: start; }
+.srch-head:hover, .srch-item.open .srch-head { background: var(--surface); }
+.srch-ref { font-family: var(--font-en); font-size: 16px; font-weight: 600; letter-spacing: 0.02em; color: var(--text); text-align: start; }
+.srch-firm { font-size: 16.5px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.srch-meta { font-size: 14px; color: var(--text-2); white-space: nowrap; }
+.srch-meta b { font-family: var(--font-en); font-weight: 600; color: var(--text); }
+.srch-meta em { font-style: normal; color: var(--st-partial); }
+.srch-caret { width: 12px; height: 12px; fill: none; stroke: var(--text-3); stroke-width: 1.6; transition: transform var(--t-slide); }
+.srch-item.open .srch-caret { transform: rotate(180deg); }
+.srch-drawer { padding: 4px 20px 18px; background: var(--surface); }
+.srch-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
+.srch-signed { font-size: 13.5px; color: var(--text-3); }
+.srch-table { border: 1px solid var(--line-2); border-radius: 12px; overflow: hidden; }
+.srch-row { width: 100%; display: grid; grid-template-columns: 30px 96px 120px minmax(160px, auto) minmax(0, 1fr); align-items: center; gap: 14px;
+  padding: 10px 14px; text-align: start; background: var(--bg); }
+.srch-row + .srch-row { border-top: 1px solid var(--line); }
+.srch-th { background: var(--bg-2); font-size: 13px; color: var(--text-3); cursor: default; }
+button.srch-row:hover { background: var(--surface-2); }
+.srch-row.hit { background: rgba(78, 125, 178, 0.14); box-shadow: inset 3px 0 0 var(--hl-line); }
+[dir="rtl"] .srch-row.hit { box-shadow: inset -3px 0 0 var(--hl-line); }
+.srch-row .num { font-family: var(--font-en); font-size: 15px; color: var(--text-2); }
+.srch-row .srch-amt { font-size: 16px; font-weight: 600; color: var(--text); }
+.srch-seq { width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; font: 600 12.5px/1 var(--font-en); color: var(--bg); background: var(--hl-line); }
+.srch-th .srch-seq, .srch-th span:first-child { background: none; color: var(--text-3); }
+.srch-note { font-size: 13.5px; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.srch-dash { color: var(--text-3); }
+@media (max-width: 720px) {
+  .srch-bar { grid-template-columns: 1fr 1fr; }
+  .srch-box { grid-column: 1 / -1; }
+  .srch-head { grid-template-columns: minmax(0, 1fr) auto 12px; grid-template-areas: "ref chip caret" "firm firm caret" "meta meta caret"; gap: 4px 12px; padding: 14px 16px; }
+  .srch-ref { grid-area: ref; } .srch-firm { grid-area: firm; } .srch-meta { grid-area: meta; white-space: normal; }
+  .srch-head .chip, .srch-head .adm-chip { grid-area: chip; } .srch-caret { grid-area: caret; }
+  .srch-drawer { padding: 4px 12px 14px; }
+  .srch-row { grid-template-columns: 26px minmax(0, 1fr) auto; grid-template-areas: "seq date amt" ". st st" ". note note"; gap: 6px 10px; }
+  .srch-row > :nth-child(1) { grid-area: seq; } .srch-row > :nth-child(2) { grid-area: date; } .srch-row > :nth-child(3) { grid-area: amt; justify-self: end; }
+  .srch-row > :nth-child(4) { grid-area: st; } .srch-row > :nth-child(5) { grid-area: note; }
+  .srch-th { display: none; }
+}
+@media (max-width: 720px) {
+  .srch-sel select { font-size: 14px; padding-inline-start: 34px; padding-inline-end: 6px; }
+  .srch-sel svg { inset-inline-start: 11px; }
+}
+
+/* ── search, round 2 (Ibrahim, 2026-11-13): left → right in both languages · the Boss's calendar · firm → contracts →
+   the Boss's drawer. The firm list and the drawer ARE the Boss's classes (.firms .firm .firm-bar .drawer .row .cell). ── */
+.srch-bar { grid-template-columns: minmax(0, 1fr) 230px 230px; }
+.srch-month { position: relative; min-width: 0; }
+.srch-mbtn.month-label { width: 100%; height: 46px; justify-content: flex-start; gap: 10px; padding: 0 14px; font-size: 15.5px; font-weight: 400;
+  color: var(--text); background: var(--bg-2); border: 1px solid var(--line-2); border-radius: 12px; }
+.srch-mbtn.month-label:hover, .srch-mbtn.month-label[aria-expanded="true"] { border-color: var(--silver); background: var(--bg-2); }
+.srch-mbtn svg:first-child { width: 16px; height: 16px; flex: none; fill: none; stroke: var(--text-3); stroke-width: 1.5; }
+.srch-mbtn span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: start; }
+.srch-mbtn.on { border-color: var(--hl-line); }
+.srch-month .picker { left: auto; right: 0; transform: none; }
+.srch-pick-foot { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--line); }
+.srch-pick-foot .picker-today { border-top: 0; }
+.srch-pick-foot .picker-today + .picker-today { border-inline-start: 1px solid var(--line); }
+/* firm: its name only */
+.adm-firms { margin-top: 0; }
+.adm-fbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; text-align: left; }
+/* its contracts, each closed */
+.adm-cons { list-style: none; margin: 0; padding: 4px 16px 16px; display: grid; gap: 8px; }
+.adm-con { background: var(--bg-2); border: 1px solid var(--line-2); border-radius: 12px; overflow: hidden; }
+.adm-cbar { width: 100%; display: grid; grid-template-columns: minmax(120px, auto) minmax(0, 1fr) auto 14px; align-items: center; gap: 16px;
+  padding: 14px 18px; text-align: left; }
+.adm-cbar:hover, .adm-con.open > .adm-cbar { background: var(--surface); }
+.adm-cref { font-family: var(--font-en); font-size: 16px; font-weight: 600; letter-spacing: 0.02em; color: var(--text); }
+.adm-cmeta { font-size: 14px; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: start; }
+.adm-cmeta b { font-family: var(--font-en); font-weight: 600; color: var(--text); }
+.adm-cmeta em { font-style: normal; color: var(--st-partial); }
+.adm-con.open > .adm-cbar .firm-caret { transform: rotate(180deg); }
+.adm-con-tools { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; padding: 12px 16px 0; }
+.adm-con .drawer { margin: 10px 16px 16px; }
+.adm-con .cell.note svg { width: 14px; height: 14px; }
+/* the installments the search matched: a blue tint + frame (the late edge, if any, stays) */
+.row.is-hit { background-color: rgba(78, 125, 178, 0.16); outline: 1px solid rgba(78, 125, 178, 0.6); outline-offset: -1px; }
+@media (max-width: 720px) {
+  .srch-bar { grid-template-columns: 1fr 1fr; }
+  .adm-cons { padding: 4px 8px 12px; }
+  .adm-cbar { grid-template-columns: minmax(0, 1fr) auto 12px; grid-template-areas: "ref chip caret" "meta meta caret"; gap: 4px 12px; padding: 12px 14px; }
+  .adm-cref { grid-area: ref; } .adm-cmeta { grid-area: meta; white-space: normal; }
+  .adm-cbar .chip, .adm-cbar .adm-chip { grid-area: chip; } .adm-cbar .firm-caret { grid-area: caret; }
+  .adm-con .drawer { margin: 8px; }
+  .srch-month .picker { right: auto; left: 0; width: min(320px, calc(100vw - 32px)); }
+}
+.srch-count .adm-link { margin: 0; }                         /* count on the left, «مسح البحث» on the right */
+.row.is-hit { background-color: rgba(78, 125, 178, 0.24); outline: 1.5px solid var(--hl-line); outline-offset: -1.5px; }
+.adm-con .drawer .row.is-hit { background-color: rgba(78, 125, 178, 0.24); outline: 2px solid var(--hl-line); outline-offset: -2px; }
+
+/* ── «تسجيل دفعة»: the payment workspace (receipt right, form + split left) and the drawer's payments list ── */
+.pay-chip { color: var(--hl-line); background: rgba(78, 125, 178, 0.12); box-shadow: inset 0 0 0 1px rgba(78, 125, 178, 0.45); }
+.pay-chip::before { background: var(--hl-line); }
+.pay-form { display: flex; flex-direction: column; flex: 1; padding-top: var(--s-4); }
+.pay-list { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line-2); border-radius: 12px; overflow: hidden; }
+.pay-li { display: grid; grid-template-columns: auto minmax(0, 1fr) 120px 70px; align-items: center; gap: 10px; padding: 9px 12px; background: var(--bg); }
+.pay-li + .pay-li { border-top: 1px solid var(--line); }
+.pay-li.on { background: rgba(78, 125, 178, 0.10); }
+.pay-li.bad { background: rgba(196, 43, 43, 0.14); }
+.pay-chk { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+.pay-chk input { width: 17px; height: 17px; accent-color: var(--hl-line); }
+.pay-what { display: flex; flex-direction: column; min-width: 0; }
+.pay-what b { font-family: var(--font-en); font-weight: 500; font-size: 15px; color: var(--text); }
+.pay-what small { font-size: 12.5px; color: var(--text-3); }
+.pay-what small .num { font-family: var(--font-en); color: var(--text-2); }
+.pay-in.fld-in { height: 38px; font-size: 15px; text-align: right; }
+.pay-tag { font-size: 12.5px; color: var(--text-2); white-space: nowrap; }
+.pay-li.bad .pay-tag { color: var(--st-late); }
+.pay-sum { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; padding: 10px 12px; border-radius: 10px;
+  font-size: 14px; color: var(--text-2); background: var(--surface); }
+.pay-sum b { font-family: var(--font-en); color: var(--text); }
+.pay-sum svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; vertical-align: -3px; }
+.pay-sum.s-ok { color: var(--st-paid); background: rgba(138, 214, 172, 0.10); }
+.pay-sum.s-bad, .pay-sum.s-over { color: var(--st-late); background: rgba(196, 43, 43, 0.12); }
+.pay-need { margin: 0 0 10px; font-size: 13.5px; color: var(--text-3); line-height: 1.5; }
+.pay-need.bad { color: var(--st-late); }
+.pay .ws-doc-bar.pay-bar { align-items: center; padding: 8px 14px; }
+.pay .ws-doc-bar.pay-bar .ws-doc-meta { margin-bottom: 0; }
+.pay-drop { flex: 1; margin: 16px; border-radius: 14px; }
+.ws-mark.is-pay { border-color: var(--st-paid); background: rgba(138, 214, 172, 0.16); }
+.ws-mark.is-pay .ws-tag { background: var(--st-paid); color: var(--bg); }
+/* the drawer: confirmation + the contract's payments */
+.pay-flash { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: var(--st-paid); }
+.pay-flash svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; }
+.pay-hist { margin: 0 16px 16px; }
+.pay-hist h4 { display: flex; gap: 8px; align-items: baseline; margin: 4px 0 8px; font-size: 15px; font-weight: 600; color: var(--text); }
+.pay-hist h4 b { font-weight: 500; color: var(--text-3); }
+.pay-hist ul { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line-2); border-radius: 12px; overflow: hidden; }
+.pay-h { display: grid; grid-template-columns: 84px 100px 120px minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 10px 14px; background: var(--bg); }
+.pay-h + .pay-h { border-top: 1px solid var(--line); }
+.pay-h .num { font-family: var(--font-en); color: var(--text-2); }
+.pay-h b.num { color: var(--text); font-weight: 600; }
+.pay-ref { font-family: var(--font-en); font-size: 13.5px; color: var(--text-2); }
+.pay-al { font-size: 13px; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pay-acts { display: inline-flex; align-items: center; gap: 12px; }
+.pay-acts .adm-link { margin: 0; }
+.pay-rev { color: var(--st-late); text-decoration-color: rgba(245, 167, 156, 0.4); }
+@media (max-width: 720px) {
+  .pay-li { grid-template-columns: auto minmax(0, 1fr) 100px; }
+  .pay-tag { grid-column: 2 / -1; }
+  .pay-h { grid-template-columns: auto auto minmax(0, 1fr); }
+  .pay-al, .pay-acts { grid-column: 1 / -1; }
+}
+
+/* ── «رصيد تحت الحساب»: the credit card + its ledger (the first visible financial log) ── */
+.cr-card { margin: 4px 16px 4px; padding: 12px 16px; border-radius: 12px; background: var(--bg-2); border: 1px solid var(--line-2); }
+.cr-top { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 16px; }
+.cr-lbl { font-size: 14.5px; color: var(--text-2); }
+.cr-bal { font-family: var(--font-en); font-size: 20px; font-weight: 600; color: var(--text); }
+.cr-acts { display: inline-flex; gap: 8px; margin-inline-start: auto; }
+.cr-acts .adm-btn.on { background: var(--surface-3); border-color: var(--silver); }
+.cr-ledger { margin-top: 12px; border: 1px solid var(--line-2); border-radius: 10px; overflow: auto; }
+.cr-ledger table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.cr-ledger th { padding: 9px 12px; text-align: start; font-size: 12.5px; font-weight: 600; color: var(--text-3); background: var(--surface); white-space: nowrap; }
+.cr-ledger td { padding: 9px 12px; border-top: 1px solid var(--line); color: var(--text-2); vertical-align: top; }
+.cr-ledger .num { font-family: var(--font-en); text-align: end; white-space: nowrap; }
+.cr-ledger td.in { color: var(--st-paid); } .cr-ledger td.out { color: var(--st-late); } .cr-ledger td.bal { color: var(--text); font-weight: 600; }
+.cr-open { margin: 0; text-align: start; color: var(--text); }
+.cr-extra { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
+.cr-note { font-size: 12.5px; color: var(--text-3); }
+.cr-deposit-reversed td, .cr-reversal td { background: rgba(196, 43, 43, 0.05); }
+/* the payment's source + the credit side of the payment workspace */
+.pay-src { margin: 0; } .pay-src button { font-size: 13.5px; }
+.pay-today { display: flex; align-items: center; gap: 8px; margin: 0 0 var(--s-3); padding: 10px 12px; border-radius: 10px; font-size: 14px;
+  color: var(--text); background: var(--surface); }
+.pay-today svg { width: 15px; height: 15px; flex: none; fill: none; stroke: var(--st-paid); stroke-width: 2; }
+.cr-src { padding: 18px; overflow: auto; }
+.cr-proof { margin: 0 0 14px; font-size: 14.5px; line-height: 1.7; color: var(--text-2); }
+.cr-src ul { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line-2); border-radius: 12px; overflow: hidden; }
+.cr-src li { display: grid; grid-template-columns: 84px 100px 120px minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 10px 14px; background: var(--bg); }
+.cr-src li + li { border-top: 1px solid var(--line); }
+.cr-src .num { font-family: var(--font-en); color: var(--text-2); } .cr-src b.num { color: var(--text); }
+.cr-src small { font-size: 13px; color: var(--st-paid); }
+.pay-h.is-credit .pay-ref { font-family: inherit; color: var(--hl-line); }
+.pay-h.is-back { opacity: 0.6; }
+/* the settlement voucher: a page the system writes (shown in the Admin's and the Boss's document panel) */
+.doc-html { padding: 24px; display: flex; justify-content: center; }
+.voucher { width: 100%; max-width: 640px; padding: 28px 30px; border-radius: 6px; background: var(--paper); color: var(--ink); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+  font-size: 14.5px; line-height: 1.6; }
+.voucher header { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding-bottom: 12px; border-bottom: 2px solid var(--ink); }
+.voucher .v-kind { font-size: 20px; font-weight: 700; }
+.voucher .v-no { font-family: var(--font-en); font-size: 20px; letter-spacing: 0.04em; }
+.voucher.v-reversal .v-kind { color: var(--ink-danger); }
+.voucher dl { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px; margin: 16px 0; }
+.voucher dl div { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px dashed var(--ink-rule); padding-bottom: 4px; }
+.voucher dt { color: var(--ink-2); } .voucher dd { margin: 0; font-weight: 600; font-family: var(--font-en); }
+.voucher table { width: 100%; border-collapse: collapse; margin-top: 4px; }
+.voucher td { padding: 8px 6px; border-top: 1px solid var(--ink-rule); } .voucher td.n { text-align: end; font-family: var(--font-en); font-weight: 700; }
+.voucher footer { margin-top: 16px; font-size: 12.5px; color: var(--ink-2); }
+@media (max-width: 720px) {
+  .cr-card { margin: 4px 8px; } .cr-acts { margin-inline-start: 0; }
+  .cr-src li { grid-template-columns: auto auto minmax(0, 1fr); }
+  .voucher dl { grid-template-columns: 1fr; }
+}
+
+/* ── simplicity in the Admin too (Ibrahim, 2026-11-14): the credit and the payments list wait behind quiet toggles ── */
+.adm-quiet-row { display: flex; justify-content: flex-end; padding: 2px 16px 0; }
+.adm-quiet { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 8px; font-size: 13.5px; color: var(--text-3); }
+.adm-quiet:hover, .adm-quiet.on { color: var(--text); background: var(--surface-2); }
+.adm-quiet svg { width: 10px; height: 10px; fill: none; stroke: currentColor; stroke-width: 1.8; transition: transform var(--t-slide); }
+.adm-quiet.on svg { transform: rotate(180deg); }
+.adm-quiet b { font-family: var(--font-en); font-weight: 600; }
+.adm-con-tools .pays-toggle { margin-inline-start: auto; }
+/* the ledger: left → right in both languages; fixed columns, every number under its own heading */
+.cr-ledger table { table-layout: fixed; min-width: 560px; }
+.cr-ledger col.c-date { width: 92px; } .cr-ledger col.c-n { width: 112px; }
+.cr-ledger th, .cr-ledger td { text-align: left; }
+.cr-ledger th.num, .cr-ledger td.num { text-align: right; }
+.cr-ledger td.txt { text-align: left; }
+.cr-ledger td .cr-open { display: inline; }
+.cr-ledger td.date { font-family: var(--font-en); white-space: nowrap; color: var(--text-2); }
+
+/* ── the ladder stays pure (Ibrahim, 2026-11-14): firm → contracts → instalments; the credit and the payments record
+   are tiny markers ON the bars and open in the side panel ── */
+.adm-fbar { display: flex; align-items: center; gap: 4px; padding: 0; }
+.adm-fopen { flex: 1; min-width: 0; padding: 18px 20px; text-align: left; }
+.adm-fopen .firm-name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.adm-fcaret { padding: 18px 20px 18px 6px; }
+.adm-cbar { display: flex; align-items: center; gap: 4px; padding: 0; }
+.adm-cbar:hover, .adm-con.open > .adm-cbar { background: var(--surface); }
+.adm-copen { flex: 1; min-width: 0; display: grid; grid-template-columns: minmax(120px, auto) minmax(0, 1fr); align-items: center; gap: 16px;
+  padding: 14px 0 14px 18px; text-align: left; }
+.adm-cend { display: inline-flex; align-items: center; gap: 12px; padding: 14px 18px 14px 6px; }
+.adm-con.open > .adm-cbar .adm-cend .firm-caret { transform: rotate(180deg); }
+/* the markers: small, muted, the number only when there is one */
+.adm-mark { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 8px; border-radius: 8px;
+  color: var(--text-3); font-size: 13px; }
+.adm-mark svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.4; }
+.adm-mark b { font-family: var(--font-en); font-weight: 600; }
+.adm-mark:hover { color: var(--text); background: var(--surface-3); }
+.cr-mark:not(.has) { opacity: 0.55; } .cr-mark:not(.has):hover { opacity: 1; }
+.cr-mark.has { color: var(--st-paid); }
+/* the Admin's pages inside the side panel */
+.doc-html .adm-pane { width: 100%; max-width: 760px; }
+.adm-pane .cr-top { padding: 4px 2px 12px; border-bottom: 1px solid var(--line); }
+.adm-pane .pane-h { margin: 16px 0 8px; font-size: 15px; font-weight: 600; color: var(--text); }
+.adm-pane .pay-hist { margin: 0; }
+.adm-pane .pay-flash { margin: 10px 0 0; }
+.adm-pane .cr-ledger table { min-width: 0; }
+@media (max-width: 720px) {
+  .adm-copen { grid-template-columns: minmax(0, 1fr); gap: 2px; padding: 12px 0 12px 14px; }
+  .adm-cend { padding: 12px 14px 12px 4px; }
+  .adm-fopen { padding: 16px; } .adm-fcaret { padding: 16px 16px 16px 4px; }
+}
+/* in the side panel a payment reads in two lines: date · amount · reference, then the full split and its actions */
+.adm-pane .pay-h { grid-template-columns: auto auto minmax(0, 1fr); row-gap: 6px; }
+.adm-pane .pay-al { grid-column: 1 / -1; white-space: normal; overflow: visible; }
+.adm-pane .pay-acts { grid-column: 1 / -1; justify-content: flex-end; }
+.adm-pane .pay-ref { white-space: nowrap; }
+/* the ledger in the side panel: tighter number columns, and a long movement label wraps inside its own cell */
+.adm-pane .cr-ledger col.c-date { width: 78px; } .adm-pane .cr-ledger col.c-n { width: 84px; }
+.cr-ledger td.txt { overflow-wrap: anywhere; overflow: hidden; }
+.adm-pane .cr-ledger th, .adm-pane .cr-ledger td { padding: 8px 10px; }
+.cr-ledger .cr-open { display: block; width: 100%; white-space: normal; text-align: left; overflow-wrap: anywhere; }

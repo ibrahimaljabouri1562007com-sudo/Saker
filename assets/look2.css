@@ -1,0 +1,239 @@
+/* صقر · Look v2 (Ibrahim, 2026-11-17: "raise it up — modern, a professional touch, not gold").
+   A layer ON TOP of the current look, active only when <html data-look="2"> (the «v2» switch in the bar; remembered).
+   Nothing here changes a layout, a column, an order or a click — only depth, finish and consistency:
+   · depth: a deeper ink base, one soft light behind the three words, a fine grain, the sign-in landscape as horizon
+   · presence: the falcon + the generated «صقر / SAKER» wordmark, a translucent bar, one segmented role switch
+   · restraint: glass surfaces with a hairline edge and a top highlight; light, tabular numbers; one pill-button style
+   · a calmer drawer: values as plain text (the document icon + an underline come forward on hover)
+   Colours are tokens (--lk-*); the sign-in screen is untouched (scoped to body:not(.signing)). */
+
+.bar-word { display: none; }                                       /* the wordmark lockup exists only in Look v2 */
+.look-btn.on { background: var(--surface-3); color: var(--text); }
+
+html[data-look="2"] body:not(.signing) {
+  --lk-top: #16253A;  --lk-mid: #111D2F;  --lk-bot: #0C1625;
+  --lk-glow: rgba(126, 168, 222, 0.20);
+  --lk-glass: rgba(255, 255, 255, 0.045);  --lk-glass-2: rgba(255, 255, 255, 0.075);  --lk-glass-3: rgba(255, 255, 255, 0.12);
+  --lk-edge: rgba(255, 255, 255, 0.09);    --lk-edge-2: rgba(255, 255, 255, 0.17);
+  --lk-shine: rgba(255, 255, 255, 0.10);
+  --lk-shadow: rgba(2, 7, 15, 0.55);
+  --lk-sink: rgba(6, 12, 22, 0.32);
+  --lk-bar: rgba(12, 21, 35, 0.66);
+  background:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .05 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"),
+    radial-gradient(ellipse 62% 40% at 50% 14%, var(--lk-glow), transparent 72%),
+    linear-gradient(180deg, var(--lk-top) 0%, var(--lk-mid) 46%, var(--lk-bot) 100%);
+  background-attachment: fixed;
+}
+
+/* ── the bar: translucent, a hairline, the brand with presence, controls of one family ── */
+html[data-look="2"] body:not(.signing) .bar {
+  height: 66px; background: var(--lk-bar); border-bottom: 1px solid var(--lk-edge);
+  -webkit-backdrop-filter: blur(16px) saturate(1.25); backdrop-filter: blur(16px) saturate(1.25);
+}
+html[data-look="2"] body:not(.signing) .bar-start { gap: 12px; }
+html[data-look="2"] body:not(.signing) .bar-mark { width: 36px; height: 36px; color: var(--silver); filter: drop-shadow(0 2px 6px var(--lk-shadow)); }
+html[data-look="2"] body:not(.signing) .bar-name { display: none; }
+html[data-look="2"] body:not(.signing) .bar-word {
+  display: block; width: 104px; height: 31px; background: var(--silver);
+  -webkit-mask: url("../brand/saker-wordmark.svg") center / contain no-repeat; mask: url("../brand/saker-wordmark.svg") center / contain no-repeat;
+}
+html[data-look="2"] body:not(.signing) .demo-tag {
+  font-size: 11.5px; letter-spacing: 0.02em; color: var(--text-3); background: none;
+  border: 1px solid var(--lk-edge-2); border-radius: 999px; padding: 3px 10px; margin-inline-start: 6px;
+}
+html[data-look="2"] body:not(.signing) .bar-end { gap: 10px; }
+html[data-look="2"] body:not(.signing) .role {
+  display: inline-flex; align-items: center; gap: 2px; padding: 3px; border-radius: 999px;
+  background: var(--lk-glass); border: 1px solid var(--lk-edge);
+}
+html[data-look="2"] body:not(.signing) .role-label { padding: 0 10px; font-size: 12px; color: var(--text-3); }
+html[data-look="2"] body:not(.signing) .role button {
+  height: 30px; padding: 0 14px; border-radius: 999px; font-size: 13.5px; color: var(--text-2); background: none; border: 0;
+}
+html[data-look="2"] body:not(.signing) .role button:hover { color: var(--text); }
+html[data-look="2"] body:not(.signing) .role button.on { background: var(--lk-glass-3); color: var(--text); box-shadow: inset 0 0 0 1px var(--lk-edge-2); }
+html[data-look="2"] body:not(.signing) .lang-btn,
+html[data-look="2"] body:not(.signing) #signout {
+  width: 36px; height: 36px; min-width: 36px; padding: 0; display: inline-grid; place-items: center; border-radius: 999px;
+  background: var(--lk-glass); border: 1px solid var(--lk-edge); color: var(--text-2); font-size: 13px;
+}
+html[data-look="2"] body:not(.signing) .lang-btn:hover,
+html[data-look="2"] body:not(.signing) #signout:hover { background: var(--lk-glass-2); border-color: var(--lk-edge-2); color: var(--text); }
+
+/* ── the Sky: the three words as the centrepiece ── */
+html[data-look="2"] body:not(.signing) .sky { position: relative; isolation: isolate; }
+html[data-look="2"] body:not(.signing) .sky-arc,
+html[data-look="2"] body:not(.signing) .horizon { display: none; }
+html[data-look="2"] body:not(.signing) .sky::after {                 /* the sign-in landscape, as a soft horizon */
+  content: ''; position: absolute; z-index: -1; pointer-events: none; left: 50%; transform: translateX(-50%);
+  width: 100vw; bottom: -2px; height: 62%;
+  background: url("../brand/scene-horizon.webp") center bottom / cover no-repeat; opacity: 0.6;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 45%, #000 80%, transparent 100%);
+  mask-image: linear-gradient(180deg, transparent 0%, #000 45%, #000 80%, transparent 100%);
+  transition: opacity 320ms ease;
+}
+html[data-look="2"] body:not(.signing) .sky.compact::after { opacity: 0.22; }
+html[data-look="2"] body:not(.signing) .sky-row {
+  background: linear-gradient(180deg, var(--lk-glass-2), var(--lk-glass));
+  border: 1px solid var(--lk-edge); border-radius: 22px; padding: 34px 12px;
+  box-shadow: 0 34px 70px -28px var(--lk-shadow), inset 0 1px 0 var(--lk-shine);
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+}
+html[data-look="2"] body:not(.signing) .sky-cell + .sky-cell { border-inline-start-color: var(--lk-edge); }
+html[data-look="2"] body:not(.signing) .sky-label { font-size: 15px; letter-spacing: 0.02em; color: var(--text-2); }
+html[data-look="2"] body:not(.signing) .sky-num {
+  font-family: var(--font-en); font-weight: 300; letter-spacing: -0.015em; font-variant-numeric: tabular-nums lining-nums;
+}
+html[data-look="2"] body:not(.signing) .sky-unit { font-size: 12.5px; letter-spacing: 0.12em; color: var(--text-3); }
+html[data-look="2"] body:not(.signing) .month-label {
+  padding: 8px 18px; border-radius: 999px; background: var(--lk-glass); border: 1px solid var(--lk-edge);
+}
+html[data-look="2"] body:not(.signing) .month-label:hover,
+html[data-look="2"] body:not(.signing) .month-label[aria-expanded="true"] { background: var(--lk-glass-2); border-color: var(--lk-edge-2); }
+html[data-look="2"] body:not(.signing) .month-nav .icon-btn { width: 34px; height: 34px; border-radius: 999px; border: 1px solid var(--lk-edge); background: var(--lk-glass); }
+html[data-look="2"] body:not(.signing) .month-nav .icon-btn:hover { background: var(--lk-glass-2); }
+html[data-look="2"] body:not(.signing) .picker {
+  background: linear-gradient(180deg, var(--lk-glass-3), var(--lk-glass-2)), var(--bg-2); border: 1px solid var(--lk-edge-2);
+  box-shadow: 0 24px 60px -18px var(--lk-shadow); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+}
+
+/* ── one button family: the «التفاصيل» pill ── */
+html[data-look="2"] body:not(.signing) .sky-more {
+  border-radius: 999px; padding: 10px 26px; background: var(--lk-glass); border: 1px solid var(--lk-edge-2);
+  box-shadow: inset 0 1px 0 var(--lk-shine); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+}
+html[data-look="2"] body:not(.signing) .sky-more:hover { background: var(--lk-glass-2); border-color: var(--silver); }
+
+/* ── the firm list: one glass card, quiet separators, light tabular numbers ── */
+html[data-look="2"] body:not(.signing) .firms {
+  background: linear-gradient(180deg, var(--lk-glass-2), var(--lk-glass)); border: 1px solid var(--lk-edge); border-radius: 20px;
+  box-shadow: 0 30px 60px -30px var(--lk-shadow), inset 0 1px 0 var(--lk-shine);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+}
+html[data-look="2"] body:not(.signing) .firm { border-bottom-color: var(--lk-edge); }
+html[data-look="2"] body:not(.signing) .firm-bar:hover { background: var(--lk-glass); }
+html[data-look="2"] body:not(.signing) .firm.open,
+html[data-look="2"] body:not(.signing) .firm.open > .firm-bar { background: var(--lk-glass-2); }
+html[data-look="2"] body:not(.signing) .firm-num { font-weight: 400; font-variant-numeric: tabular-nums; letter-spacing: -0.005em; }
+
+/* ── the drawer: a statement, not a form — plain values; the icon and the underline come forward on hover ── */
+html[data-look="2"] body:not(.signing) .drawer { background: var(--lk-sink); border-color: var(--lk-edge); border-radius: 14px; }
+html[data-look="2"] body:not(.signing) .row { border-top-color: var(--lk-edge); }
+html[data-look="2"] body:not(.signing) .cell.link {
+  border: 0; background: none; padding: 4px 0; border-radius: 0; gap: 7px;
+}
+html[data-look="2"] body:not(.signing) .cell.link .v { border-bottom: 1px solid transparent; transition: border-color 140ms; }
+html[data-look="2"] body:not(.signing) .cell.link:hover,
+html[data-look="2"] body:not(.signing) .cell.link:focus-visible { background: none; }
+html[data-look="2"] body:not(.signing) .cell.link:hover .v,
+html[data-look="2"] body:not(.signing) .cell.link:focus-visible .v { border-bottom-color: var(--silver); }
+html[data-look="2"] body:not(.signing) .cell.link .pf { opacity: 0.3; transition: opacity 140ms; }
+html[data-look="2"] body:not(.signing) .cell.link:hover .pf,
+html[data-look="2"] body:not(.signing) .cell.link:focus-visible .pf { opacity: 0.9; }
+html[data-look="2"] body:not(.signing) .cell.note.link span { border-bottom: 1px solid transparent; }
+html[data-look="2"] body:not(.signing) .cell.note.link:hover span { border-bottom-color: var(--silver); }
+html[data-look="2"] body:not(.signing) .chip { box-shadow: inset 0 0 0 1px var(--lk-edge); }
+
+/* the document panel joins the same finish */
+html[data-look="2"] body:not(.signing) .panel { border-inline-start: 1px solid var(--lk-edge); box-shadow: -30px 0 60px -30px var(--lk-shadow); }
+/* the full-width horizon must never make the page scroll sideways (100vw counts the scrollbar) */
+html[data-look="2"] body:not(.signing) { overflow-x: clip; }
+html[data-look="2"] { overflow-x: clip; }
+
+/* ── the falcon as part of the page (Ibrahim, 2026-11-17: "find a well manner … the falcon semi-appearing, restraint") ──
+   The header carries only the quiet mark; the falcon itself lives in the page: large, a few percent bright, at the
+   page's start edge behind the three words, cut by the edge and fading into the dusk. It leaves when the details open. */
+.sky-falcon { display: none; }
+html[data-look="2"] body:not(.signing) .sky-falcon {
+  display: block; position: absolute; z-index: -1; pointer-events: none;
+  inset-inline-start: -16%; top: -12%; width: min(52vw, 620px); height: auto; aspect-ratio: 1;
+  color: var(--silver); opacity: 0.075;
+  -webkit-mask-image: radial-gradient(closest-side at 42% 46%, #000 38%, transparent 100%);
+  mask-image: radial-gradient(closest-side at 42% 46%, #000 38%, transparent 100%);
+  transition: opacity 360ms ease;
+}
+html[data-look="2"] body:not(.signing) .sky.compact .sky-falcon { opacity: 0; }
+/* the bar: the mark alone, quiet — the full lockup belongs to the sign-in */
+html[data-look="2"] body:not(.signing) .bar-word { display: none; }
+/* the falcon reads clearly once the Boss settles (Ibrahim, 2026-11-17: "a bit clearer … he appears too small"): larger,
+   full strength; the negative margin keeps the bar's height — the falcon fills only the middle half of its square */
+html[data-look="2"] body:not(.signing) .bar-mark { width: 46px; height: 46px; margin-block: -8px; margin-inline-end: -4px; opacity: 1; filter: none; }
+html[data-look="2"] body:not(.signing) .bar-mark:hover { opacity: 1; }
+/* placed at the PAGE's start edge (not the content's), a quarter of it cut by the edge, fading down before the numbers */
+html[data-look="2"] body:not(.signing) .sky-falcon {
+  --fw: min(44vw, 600px);
+  width: var(--fw); top: -9%;
+  inset-inline-start: calc((100% - 100vw) / 2 - var(--fw) * 0.24);
+  opacity: 0.1;
+  -webkit-mask-image: linear-gradient(180deg, #000 18%, rgba(0, 0, 0, 0.55) 46%, transparent 76%);
+  mask-image: linear-gradient(180deg, #000 18%, rgba(0, 0, 0, 0.55) 46%, transparent 76%);
+}
+/* framed tightly on the bird (231 × 128): it sits in the open sky between the bar and the numbers, a fifth cut by the
+   page's edge, its lower part melting before the card */
+html[data-look="2"] body:not(.signing) .sky-falcon {
+  --fw: min(40vw, 520px);
+  width: var(--fw); aspect-ratio: 231 / 128; top: 2%;
+  inset-inline-start: calc((100% - 100vw) / 2 - var(--fw) * 0.2);
+  opacity: 0.11;
+  -webkit-mask-image: linear-gradient(180deg, #000 40%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 40%, transparent 100%);
+}
+/* the bird always faces INTO the page: the wingtips are what the edge cuts, never the head (mirrored in Arabic) */
+html[data-look="2"][dir="rtl"] body:not(.signing) .sky-falcon { transform: scaleX(-1); }
+/* the DETAILED falcon (brand/saker-mark.svg, 231 × 128) as a mask tinted with the theme silver — the small sprite is
+   simplified for 30px and reads as two strokes when large */
+html[data-look="2"] body:not(.signing) .sky-falcon {
+  background: var(--silver);
+  -webkit-mask: url("../brand/saker-mark.svg") center / contain no-repeat, linear-gradient(180deg, #000 40%, transparent 100%);
+  mask: url("../brand/saker-mark.svg") center / contain no-repeat, linear-gradient(180deg, #000 40%, transparent 100%);
+  -webkit-mask-composite: source-in; mask-composite: intersect;
+}
+/* one mask only (two composited masks left faint box edges); the bird sits in open sky, so it needs no fade */
+html[data-look="2"] body:not(.signing) .sky-falcon {
+  -webkit-mask: url("../brand/saker-mark.svg") center / contain no-repeat; mask: url("../brand/saker-mark.svg") center / contain no-repeat;
+  -webkit-mask-composite: initial; mask-composite: initial;
+}
+
+/* ══ Look v2 · the Boss view continues the sign-in (Ibrahim, 2026-11-17) ══════════════════════════════════════════
+   The sign-in's own landscape stays behind the Boss, softened once (dim + blur, drawn by app.js paintScene); it
+   melts into solid ink before the firm list, so data never sits on imagery. The faint falcon watermark and the
+   horizon strip retire: the brand moment is now the falcon's flight from the sign-in into the bar. */
+.app-scene { display: none; }
+html[data-look="2"] {
+  --lk-ink: #0C1625;  --lk-veil: rgba(12, 22, 37, 0.35);
+  background: var(--lk-ink);
+}
+html[data-look="2"] body[data-role="boss"]:not(.signing) { background: transparent; }
+html[data-look="2"] body[data-role="boss"]:not(.signing) .app-scene {
+  display: block; position: absolute; inset: 0 0 auto 0; height: 100vh; z-index: -1; overflow: hidden; pointer-events: none;
+  transition: opacity 420ms ease;
+}
+.app-scene canvas { display: block; opacity: 0; transition: opacity 520ms ease; }
+.app-scene canvas.ready { opacity: 1; }
+.app-scene canvas.css-soft { filter: blur(5px) brightness(0.62) saturate(0.9); }
+.app-scene::after {                                                   /* a veil under the bar, then down to solid ink */
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(180deg, var(--lk-veil) 0%, transparent 16%, transparent 50%, var(--lk-ink) 100%);
+}
+html[data-look="2"] body[data-role="boss"]:has(.sky.compact) .app-scene { opacity: 0.42; }   /* details open: data first */
+html[data-look="2"] body[data-role="boss"]:not(.signing) .sky::after,
+html[data-look="2"] body:not(.signing) .sky-falcon { display: none; }
+
+/* the arrival: the falcon flies from the sign-in into the bar (a view transition); the land melts from sharp to soft */
+.si-falcon-fly { position: fixed; z-index: 50; pointer-events: none; color: var(--silver); view-transition-name: saker-falcon; }
+.si-falcon-fly path { fill: url(#silver); }
+html[data-look="2"] body:not(.signing) .bar-mark { view-transition-name: saker-falcon; }
+::view-transition-group(saker-falcon) { animation-duration: 780ms; animation-timing-function: cubic-bezier(0.2, 0.7, 0.2, 1); }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: 680ms; animation-timing-function: ease; }
+@keyframes lk-drop-in { from { opacity: 0; transform: translateY(-14px); } }
+@keyframes lk-rise { from { opacity: 0; transform: translateY(18px) scale(0.985); } }
+@keyframes lk-fade { from { opacity: 0; } }
+html[data-look="2"] body.arriving .bar { animation: lk-drop-in 560ms 260ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+html[data-look="2"] body.arriving .month-nav { animation: lk-fade 520ms 440ms both; }
+html[data-look="2"] body.arriving .sky-row { animation: lk-rise 780ms 480ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+html[data-look="2"] body.arriving .sky-unit,
+html[data-look="2"] body.arriving .sky-more { animation: lk-fade 520ms 780ms both; }
+@media (prefers-reduced-motion: reduce) {
+  html[data-look="2"] body.arriving * { animation: none !important; }
+}

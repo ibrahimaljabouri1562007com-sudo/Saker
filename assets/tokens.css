@@ -1,0 +1,52 @@
+/* صقر design tokens — "engineered calm". Every color in the app comes from here; never hardcode a hex.
+   Base colors are sampled from the SAKER identity image; status colors are muted to sit calmly on navy. */
+:root {
+  color-scheme: dark;
+
+  /* night navy, from the sky of the identity image */
+  --bg: #0C1724;
+  --bg-2: #0E1A27;
+  --surface: #122030;
+  --surface-2: #182634;
+  --surface-3: #1F2F40;
+  --paper-well: #16212D;          /* behind contract pages */
+  --paper: #FFFFFF;               /* a page the system writes (the settlement voucher), like a document page */
+  --ink: #1B2430;  --ink-2: #5B6675;  --ink-rule: #D9DEE5;  --ink-danger: #A61C1C;
+  /* the report on paper (2026-11-17): the status words in ink, the same meanings as on screen */
+  --ink-3: #8A94A2;  --paper-2: #F3F5F8;  --ink-paid: #2E6B4E;  --ink-partial: #2D5D8C;  --ink-late: #C2553F;
+  --ink-late-tint: rgba(166, 28, 28, 0.045);  --rp-shadow: rgba(0, 0, 0, 0.45);
+  --hl-paper: rgba(255, 224, 0, 0.62);  /* the classic highlighter on paper (laid over the text, multiply) */
+  --ink-shade: rgba(27, 36, 48, 0.12);
+
+  /* hairlines, like the rules beside SAKER */
+  --line: rgba(201, 207, 216, 0.17);
+  --line-2: rgba(201, 207, 216, 0.30);
+
+  /* text: brighter than the poster, for reading */
+  --text: #E6EAF0;
+  --text-2: #B4BECB;
+  --text-3: #8C98A9;
+  --silver: #C9CFD8;              /* the falcon */
+
+  /* status: muted, always paired with a word */
+  --st-paid: #8FBBA2;             /* sage */
+  --st-partial: #93B4D8;          /* steel blue (not amber: amber drifts toward gold) */
+  --st-late: #DE9088;             /* soft brick */
+  --st-due: #C9CFD8;              /* neutral silver */
+
+  /* evidence highlight on contract pages */
+  --hl-fill: rgba(78, 125, 178, 0.22);
+  --hl-line: #4E7DB2;
+
+  /* type */
+  --font-ar: 'IBM Plex Sans Arabic', 'IBM Plex Sans', system-ui, sans-serif;
+  --font-en: 'IBM Plex Sans', 'IBM Plex Sans Arabic', system-ui, sans-serif;
+
+  /* shape: firm, not soft */
+  --r-1: 3px;
+  --r-2: 6px;
+  --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 24px; --s-6: 32px; --s-7: 48px; --s-8: 64px;
+
+  /* motion: one short slide, nothing else */
+  --t-slide: 200ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}

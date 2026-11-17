@@ -1,0 +1,251 @@
+/* صقر · Boss window readability layer (Ibrahim, 2026-11-08: "clear, calm, yet has brightness").
+   Loaded after app.css. Scoped to body:not(.signing), so the sign-in screen is untouched.
+   The vibe now comes from a lit "dusk" slate-blue and clear surfaces, not from near-black:
+   brighter base, readable sizes, cards that give the eye structure. Tokens first, sizes second. */
+
+body:not(.signing) {
+  /* dusk slate: the same family as the identity sky, a few stops lighter */
+  --bg: #18263A;
+  --bg-2: #1F3049;
+  --surface: #233652;
+  --surface-2: #2A405F;
+  --surface-3: #33496B;
+  --paper-well: #1C2B41;
+  --line: rgba(214, 224, 238, 0.16);
+  --line-2: rgba(214, 224, 238, 0.30);
+  /* text: near-white for reading, two clear steps down for labels */
+  --text: #F3F6FA;
+  --text-2: #CDD6E2;
+  --text-3: #B2BFCF;
+  --silver: #D9DFE8;
+  /* status: still calm, lifted so they read at a glance on the lighter base */
+  /* five states, five colours (Ibrahim, 2026-11-12): Due silver · Due-and-late light red · Overdue dark red ·
+     Partly paid yellow · Paid green */
+  --st-paid: #8AD6AC;
+  --st-partial: #F2C94C;            /* yellow */
+  --st-late: #F5A79C;               /* light red: due, past its date, still inside its month */
+  --st-overdue: #C42B2B;            /* dark red: the month has closed with money still owed */
+  --st-overdue-ink: #FFE2DE;        /* text on the dark-red chip */
+  --st-due: #DDE4ED;                /* silver */
+
+  background: linear-gradient(180deg, #1E3049 0%, #19283D 38%, #16233A 100%) fixed;
+  font-size: 17px;
+}
+
+/* ── bar ── */
+body:not(.signing) .bar { height: 60px; background: rgba(28, 44, 66, 0.94); border-bottom-color: var(--line-2); }
+body:not(.signing) .bar-mark { width: 30px; height: 30px; }
+body:not(.signing) .bar-name { font-size: 20px; color: var(--text); }
+html[lang="en"] body:not(.signing) .bar-name { font-size: 14px; }
+body:not(.signing) .demo-tag { font-size: 12px; color: var(--text-2); }
+body:not(.signing) .role-label { font-size: 12px; color: var(--text-2); }
+body:not(.signing) .role button { font-size: 13px; }
+body:not(.signing) .lang-btn { font-size: 14px; height: 32px; min-width: 38px; color: var(--text); }
+body:not(.signing) .icon-btn svg { width: 14px; height: 14px; stroke-width: 1.8; }
+body:not(.signing) .panel { top: 60px; }
+
+/* ── Level 1: the three numbers sit on one clear card ── */
+.sky-arc { opacity: 0.14; }
+.horizon { opacity: 0.12; }
+.month-label { font-size: 19px; font-weight: 600; color: var(--text); }
+.month-label svg { width: 11px; height: 11px; stroke: var(--text-2); }
+.sky-row {
+  background: linear-gradient(180deg, rgba(42, 64, 95, 0.78), rgba(35, 54, 82, 0.78));
+  border: 1px solid var(--line-2); border-radius: 16px; padding: 28px 8px;
+  box-shadow: 0 18px 40px rgba(6, 12, 22, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+.sky-cell + .sky-cell { border-inline-start-color: var(--line-2); }
+.sky-label { font-size: 20px; font-weight: 500; color: var(--text-2); }
+.sky-num { font-weight: 500; font-size: clamp(34px, 6cqi, 66px); color: var(--text); letter-spacing: 0; }
+.sky-cell.is-paid .sky-label::before, .sky-cell.is-rem .sky-label::before { width: 8px; height: 8px; }
+.sky-unit { font-size: 14px; color: var(--text-2); letter-spacing: 0.04em; }
+.sky-more {
+  font-size: 17px; font-weight: 500; color: var(--text); padding: 11px 26px;
+  background: var(--surface-2); border-color: var(--line-2); border-radius: 10px;
+}
+.sky-more:hover { background: var(--surface-3); border-color: var(--silver); }
+.sky-more svg { width: 12px; height: 12px; stroke-width: 1.9; }
+
+/* month picker */
+.picker { background: var(--surface-2); border-radius: 12px; width: 320px; }
+.picker-year { font-size: 17px; }
+.picker-months button { font-size: 16px; padding: 10px 4px; color: var(--text); border-radius: 8px; }
+.picker-today { font-size: 15px; color: var(--text); }
+
+/* ── Level 2: firms on a card, one firm per clear row ── */
+.hover-head { font-size: 15px; font-weight: 500; color: var(--text-2); border-bottom: 0; padding-bottom: var(--s-2); }
+.hover-head b { color: var(--text-3); font-weight: 400; }
+.firms { background: var(--bg-2); border: 1px solid var(--line-2); border-radius: 14px; overflow: hidden; }
+.firm:last-child { border-bottom: 0; }
+.firm-bar { padding: 18px 20px; border-radius: 0; }
+.firm.open > .firm-bar { border-radius: 0; }
+.firm-bar:hover { background: var(--surface); }
+.firm.open > .firm-bar { background: var(--surface-2); }
+.firm-name { font-size: 19px; font-weight: 500; color: var(--text); }
+.firm-num { font-size: 22px; font-weight: 600; color: var(--text); }
+.firm-caret { width: 13px; height: 13px; stroke: var(--text-2); stroke-width: 1.9; }
+.empty { font-size: 18px; color: var(--text-2); }
+
+/* status chips: bigger words, a soft tinted pill so the state is seen before it is read */
+.chip { font-size: 15px; font-weight: 500; gap: 8px; padding: 4px 12px 4px 10px; border-radius: 999px;
+  background: rgba(221, 228, 237, 0.10); }
+.chip i { width: 8px; height: 8px; }
+/* one colour per state — the word, its dot and its pill tint always agree */
+.chip.st-due, .chip.st-due.late, .chip.st-partial, .chip.st-partial.late, .chip.st-paid, .chip.st-overdue, .chip.st-overdue.late { color: var(--c); background: var(--bgc); }
+.chip.st-due i, .chip.st-due.late i, .chip.st-partial i, .chip.st-partial.late i, .chip.st-paid i, .chip.st-overdue i, .chip.st-overdue.late i { background: var(--dot, var(--c)); }
+.chip.st-due          { --c: var(--st-due);     --bgc: rgba(221, 228, 237, 0.10); }                 /* silver */
+.chip.st-due.late     { --c: var(--st-late);    --bgc: rgba(245, 167, 156, 0.15); }                 /* light red */
+.chip.st-partial, .chip.st-partial.late { --c: var(--st-partial); --bgc: rgba(242, 201, 76, 0.14); } /* yellow, late or not */
+.chip.st-paid         { --c: var(--st-paid);    --bgc: rgba(138, 214, 172, 0.14); }                 /* green */
+.chip.st-overdue, .chip.st-overdue.late { --c: var(--st-overdue-ink); --dot: #FF8A80;               /* dark red: a solid pill */
+  --bgc: rgba(196, 43, 43, 0.62); }
+.chip-days { font-size: 14px; opacity: 1; }
+
+/* ── Level 3: the drawer — its own framed card, set inside the open firm (Ibrahim, 2026-11-12) ──
+   The open firm becomes one panel: its bar on top, then the contracts card inset below it with a clear
+   border on every side — so level 3 never blends into level 2. */
+.firm.open { background: var(--surface-2); }
+.drawer { background: var(--bg); border: 1px solid var(--line-2); border-radius: 12px; margin: 4px 16px 16px;
+  padding: 0; overflow: hidden; box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset; }
+.row { padding: 13px 18px; --colgap: var(--s-6); column-gap: var(--colgap); }
+/* header: its own band, clear weight, a firmer rule under it; a hairline in the middle of each gap */
+.row-head { font-size: 14px; font-weight: 600; color: var(--text); letter-spacing: 0.01em;
+  background: var(--surface-2); border-top: 0; border-bottom: 1px solid var(--line-2); border-radius: 0; padding-block: 11px; }
+.row-head > span { position: relative; justify-self: stretch; text-align: left; }
+.row-head > span.num { justify-self: stretch; text-align: right; }
+.row-head > span + span::before { content: ''; position: absolute; top: 2px; bottom: 2px; width: 1px;
+  left: calc(var(--colgap) / -2); background: var(--line-2); }
+.row-head .hint { display: block; margin-top: 3px; font-size: 11.5px; font-weight: 400; letter-spacing: 0.06em; color: var(--text-3); }
+.row-head + .group > .row:first-child { border-top: 0; }
+.cell { font-size: 17px; color: var(--text); }
+.cell.amt { font-size: 19px; font-weight: 600; }
+.cell.amt small { font-size: 13px; font-weight: 400; color: var(--text-2); }
+.cell.ref { font-size: 16px; font-weight: 500; }
+.cell.date { font-family: var(--font-en); font-variant-numeric: tabular-nums; letter-spacing: 0.03em; }
+.cell.note { font-size: 15px; color: var(--text-2); }
+.cell.note svg { width: 16px; height: 16px; }
+
+/* overdue rows: a soft red tint and a thin red edge on the reading side — no group label needed */
+.row.is-late { background: rgba(196, 43, 43, 0.08); box-shadow: inset 3px 0 0 var(--st-overdue); }   /* overdue rows: dark red, like their chip */
+[dir="rtl"] .row.is-late { box-shadow: inset -3px 0 0 var(--st-overdue); }
+
+/* every value that opens its proof is FRAMED, with a small document mark — seen from across the room,
+   no hover needed. Hover only brightens it. */
+.cell.link { text-decoration: none !important; display: inline-flex; align-items: center; gap: 8px; margin: 0;
+  padding: 5px 10px; border: 1px solid rgba(201, 207, 216, 0.32); border-radius: 8px;
+  background: rgba(201, 207, 216, 0.06); transition: background 140ms, border-color 140ms; }
+.cell.link .pf, .chip .pf { width: 14px; height: 14px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.3;
+  stroke-linecap: round; stroke-linejoin: round; opacity: 0.75; }
+.cell.link:hover, .cell.link:focus-visible { background: rgba(201, 207, 216, 0.14); border-color: var(--silver); }
+.cell.link:hover .pf { opacity: 1; }
+.cell.amt.link { flex-wrap: wrap; justify-content: flex-end; }
+.cell.amt.link small { flex-basis: 100%; text-align: right; margin-top: -2px; }
+.cell.status.link { padding: 0; border: 0; background: none; }                       /* the chip itself is the frame */
+.cell.status.link .chip { text-decoration: none; box-shadow: inset 0 0 0 1px currentColor; gap: 8px; }
+.cell.status.link:hover .chip { filter: brightness(1.15); }
+.cell.note.link { max-width: 100%; }
+
+/* wide table: centred columns under centred headers (short, fixed-width values); the amounts stay
+   digit-aligned — a fixed-width block, centred, with the digits right-aligned inside it */
+@container (min-width: 821px) {
+  /* fixed tracks (minmax(0,…)): content can never widen a column, so header and rows share the same centres */
+  .row { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr) minmax(0, 1.15fr) minmax(0, 1.35fr) minmax(0, 1.4fr); }
+  .row-head > span, .row-head > span.num { text-align: center; }
+  .cell.ref, .cell.date, .cell.status, .cell.note { justify-self: center; }
+  .cell.amt { justify-self: center; width: min(8.4em, 100%); }
+  .cell.note.none { text-align: center; }
+}
+
+/* ── document panel ── */
+.panel { background: var(--bg-2); }
+/* side by side (owed beside paid): the panel widens over the list; each document scrolls on its own */
+.panel.wide { width: min(1320px, 96vw); }
+body.panel-open.panel-wide main { margin-right: 0; }
+.panel-body.cmp-body { padding: 0; overflow: hidden; display: flex; }
+.cmp { flex: 1; display: grid; grid-template-columns: 1fr 1fr; min-height: 0; }
+.cmp-col { display: flex; flex-direction: column; min-width: 0; min-height: 0; border-inline-start: 1px solid var(--line-2); }
+.cmp-col:first-child { border-inline-start: 0; }
+.cmp-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 16px;
+  background: var(--surface); border-bottom: 1px solid var(--line); min-height: 46px; }
+.cmp-label { font-size: 15px; font-weight: 600; color: var(--text); }
+.cmp-tabs { display: flex; gap: 4px; overflow-x: auto; }
+.cmp-scroll { flex: 1; overflow-y: auto; overflow-x: hidden; background: var(--paper-well); padding: 16px 0; min-height: 0; }
+/* the summary strip: the arithmetic first — owed · paid · left */
+.panel-strip { display: flex; justify-content: center; gap: 0; padding: 12px 20px; border-bottom: 1px solid var(--line-2); background: var(--surface-2); }
+.strip-item { display: flex; align-items: baseline; gap: 10px; padding: 2px 22px; }
+.strip-item + .strip-item { border-inline-start: 1px solid var(--line-2); }
+.strip-label { font-size: 15px; color: var(--text-2); }
+.strip-value { font-family: var(--font-en); font-variant-numeric: tabular-nums; font-size: 22px; font-weight: 600; color: var(--text); }
+.strip-item.t-paid .strip-value { color: var(--st-paid); }
+.strip-item.t-late .strip-value { color: var(--st-late); }
+@media (max-width: 720px) { .panel.wide { width: 100vw; } }          /* phone: the full screen, like the single view */
+@media (max-width: 900px) {                         /* phones and narrow windows: the two documents stack */
+  .cmp { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
+  .cmp-col { border-inline-start: 0; border-top: 1px solid var(--line-2); }
+  .cmp-col:first-child { border-top: 0; }
+  .strip-item { padding: 2px 12px; gap: 6px; }
+  .strip-label { font-size: 13px; } .strip-value { font-size: 18px; }
+}
+.panel-title { font-size: 19px; }
+.panel-sub { font-size: 15px; color: var(--text-2); }
+.panel-note-label { font-size: 13px; color: var(--text-2); }
+.panel-note p { font-size: 17px; }
+.panel-tab { font-size: 14px; padding: 6px 12px; color: var(--text); }
+.panel-loading { font-size: 15px; color: var(--text-2); }
+.panel-close svg { width: 15px; height: 15px; stroke-width: 1.8; }
+
+.admin-soon { font-size: 18px; }
+
+/* ── phone ── */
+@media (max-width: 720px) {
+  body:not(.signing) .bar { height: 56px; }
+  body:not(.signing) .panel { top: 0; }
+  .sky-row { padding: 6px 18px; border-radius: 14px; }
+  .sky-label { font-size: 17px; }
+  .sky-num { font-size: 42px; }
+  .sky.compact .sky-num { font-size: 34px; }
+  .sky-more { font-size: 16px; }
+  .firm-bar { padding: 14px 16px; }
+  .firm-name { font-size: 18px; }
+  .firm-num { font-size: 20px; }
+  .chip { font-size: 14px; }
+  .drawer { padding: 0 12px 12px; }
+  .row { padding: 14px var(--s-2); }
+  .cell { font-size: 16px; }
+  .cell.amt { font-size: 18px; }
+  .cell.date { font-size: 15px; color: var(--text-2); }
+  .cell.note { font-size: 14px; }
+}
+
+/* ── narrow list (document panel open on a laptop, tablets): the list answers to ITS OWN width,
+   so bigger type never makes columns collide. Same two-line rows as the phone. ── */
+.hover { container-type: inline-size; }
+@container (max-width: 820px) {
+  .firm-grid { grid-template-columns: minmax(0, 1fr) auto auto 14px; gap: 12px; }
+  .hover-head > span:nth-child(2) { justify-self: end; }
+  .firm-name { font-size: 18px; }
+  .firm-num { font-size: 20px; }
+  .row-head { display: none; }
+  .row { grid-template-columns: max-content minmax(0, 1fr); grid-template-areas: "ref amt" "date status" "note note"; gap: 8px 12px; }
+  .cell.ref { grid-area: ref; } .cell.amt { grid-area: amt; justify-self: end; max-width: 100%; }   /* framed values never overlap */
+  .cell.date { grid-area: date; font-size: 15px; color: var(--text-2); }
+  .cell.status { grid-area: status; justify-self: end; }
+  .cell.note { grid-area: note; }
+  .cell.note.none { display: none; }
+}
+@container (max-width: 520px) {
+  .firm-grid { grid-template-columns: minmax(0, 1fr) auto 12px; grid-template-areas: "name num caret" "chip chip caret"; gap: 4px 12px; }
+  .firm-name { grid-area: name; } .firm-num { grid-area: num; } .firm-caret { grid-area: caret; }
+  .firm-bar .chip { grid-area: chip; justify-self: start; }
+  .hover-head { display: none; }
+}
+
+/* ── the standard statuses (Ibrahim, 2026-11-13 · DPD practice) ──
+   غير مستحق بعد = silver · مستحق اليوم = brighter silver, ringed · متأخر 1–30 days = light red · 31+ = dark red (solid)
+   مسدد جزئياً = yellow (+ days when late) · مسدد = green. Late begins the day after the due date, not at month end. */
+.chip.st-current, .chip.st-today { color: var(--c); background: var(--bgc); }
+.chip.st-current i, .chip.st-today i { background: var(--c); }
+.chip.st-current { --c: var(--st-due); --bgc: rgba(221, 228, 237, 0.10); }
+.chip.st-today   { --c: var(--text); --bgc: rgba(221, 228, 237, 0.20); box-shadow: inset 0 0 0 1px rgba(221, 228, 237, 0.45); }
+/* 2026-11-17 (Ibrahim's rule): the reds follow the STAGE, not the bucket — «مستحق · n» (inside its month) light red via
+   .chip.st-due.late; «متأخر» (after its month) always the dark solid red. The bucket stays on the row for reports. */

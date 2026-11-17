@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Saker · vibe compare</title>
+<style>
+  body { margin: 0; background: #111; color: #ddd; font: 12px/1.4 system-ui, sans-serif; }
+  .pair { display: grid; grid-template-columns: 400px 400px; }
+  .pair img, .pair .live { width: 400px; height: 225px; display: block; object-fit: cover; }
+  .live { overflow: hidden; position: relative; }
+  .live iframe { width: 800px; height: 450px; border: 0; transform: scale(0.5); transform-origin: 0 0; }
+  table { border-collapse: collapse; margin: 8px; }
+  td, th { padding: 2px 8px; border-bottom: 1px solid #333; text-align: right; }
+  th:first-child, td:first-child { text-align: left; }
+  .bad { color: #f88; } .ok { color: #8f8; }
+  #overlay { position: absolute; inset: 0; width: 400px; height: 225px; opacity: 0.5; pointer-events: none; }
+</style>
+</head>
+<body>
+<!-- QA tool for the sign-in landscape: the reference beside the live render, and zone-by-zone numbers
+     read from the live GPU canvas (same zones and formulas as the reference measurement). -->
+<div class="pair">
+  <img id="refimg" src="vibe-reference.webp" alt="reference">
+  <div class="live"><iframe id="live" src="../index.html"></iframe><img id="overlay" alt="" hidden></div>
+</div>
+<table id="t"></table>
+<script>
+const ZONES = { sky_left: [0, 0, .30, .45], sky_right: [.70, 0, 1, .45], horizon: [0, .58, 1, .70], mid: [0, .70, 1, .82],
+  fg_left: [0, .82, .30, 1], fg_right: [.70, .82, 1, 1], right_edge: [.80, .55, 1, .72] };
+// ?ref=b compares against the handoff's Reference B; ?overlay=1 lays the reference over the live render at 50%
+const QS = new URLSearchParams(location.search);
+const REF_B = {"sky_left": {"lum": 17.3, "contrast": 2.9, "blue_minus_red": 24.6, "edges": 1.74}, "sky_right": {"lum": 60.9, "contrast": 25.2, "blue_minus_red": 39.4, "edges": 2.02}, "horizon": {"lum": 75.3, "contrast": 45.1, "blue_minus_red": 38.8, "edges": 10.25}, "mid": {"lum": 43.3, "contrast": 30.5, "blue_minus_red": 32.9, "edges": 16.31}, "fg_left": {"lum": 18.4, "contrast": 7.0, "blue_minus_red": 25.1, "edges": 5.64}, "fg_right": {"lum": 20.5, "contrast": 8.1, "blue_minus_red": 26.4, "edges": 6.34}, "right_edge": {"lum": 52.0, "contrast": 31.1, "blue_minus_red": 35.2, "edges": 12.69}};
+// ?ref=c: the clean navy dunes reference (2026-11-09) — texture, sky and depth target (no beam in it)
+const REF_C = {"sky_left": {"lum": 22.2, "contrast": 2.5, "blue_minus_red": 31.8, "edges": 0.24}, "sky_right": {"lum": 32.9, "contrast": 3.3, "blue_minus_red": 38.0, "edges": 0.39}, "horizon": {"lum": 71.8, "contrast": 26.6, "blue_minus_red": 47.6, "edges": 5.72}, "mid": {"lum": 61.9, "contrast": 32.4, "blue_minus_red": 46.5, "edges": 14.11}, "fg_left": {"lum": 25.3, "contrast": 4.8, "blue_minus_red": 35.6, "edges": 4.96}, "fg_right": {"lum": 31.6, "contrast": 15.0, "blue_minus_red": 38.4, "edges": 7.91}, "right_edge": {"lum": 56.5, "contrast": 25.8, "blue_minus_red": 45.2, "edges": 10.48}};
+const REF_IMG = { b: 'vibe-reference-b.png', c: 'vibe-reference-c.webp' }[QS.get('ref')] || 'vibe-reference.webp';
+document.getElementById('refimg').src = REF_IMG;
+if (QS.get('overlay')) { const o = document.getElementById('overlay'); o.src = REF_IMG; o.hidden = false; }
+const REF_A = {"sky_left": {"lum": 14.4, "contrast": 2.0, "blue_minus_red": 17.2, "edges": 0.51}, "sky_right": {"lum": 53.4, "contrast": 19.9, "blue_minus_red": 26.1, "edges": 1.69}, "horizon": {"lum": 49.1, "contrast": 24.7, "blue_minus_red": 24.1, "edges": 5.93}, "mid": {"lum": 33.5, "contrast": 19.4, "blue_minus_red": 21.8, "edges": 12.6}, "fg_left": {"lum": 13.9, "contrast": 3.4, "blue_minus_red": 17.3, "edges": 4.09}, "fg_right": {"lum": 15.3, "contrast": 4.7, "blue_minus_red": 17.7, "edges": 4.33}, "right_edge": {"lum": 37.2, "contrast": 20.2, "blue_minus_red": 22.6, "edges": 7.39}};
+
+const REF = { b: REF_B, c: REF_C }[QS.get('ref')] || REF_A;
+function measure() {
+  const w = document.getElementById('live').contentWindow;
+  const cv = w.document.getElementById('si-terrain');
+  const gl = cv.getContext('webgl2');
+  w.SakerTerrain.renderNow();
+  const W = cv.width, H = cv.height, px = new Uint8Array(W * H * 4);
+  gl.readPixels(0, 0, W, H, gl.RGBA, gl.UNSIGNED_BYTE, px);
+  const at = (x, y) => ((H - 1 - y) * W + x) * 4;                       // GL rows are bottom-up
+  const L = new Float32Array(W * H);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const i = at(x, y); L[y * W + x] = (px[i] * 299 + px[i + 1] * 587 + px[i + 2] * 114) / 1000; }
+  const out = {};
+  for (const [name, [a, b, c, d]] of Object.entries(ZONES)) {
+    const x0 = Math.floor(a * W), y0 = Math.floor(b * H), x1 = Math.floor(c * W), y1 = Math.floor(d * H);
+    let n = 0, s = 0, s2 = 0, br = 0, e = 0;
+    for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) {
+      const i = at(x, y), lum = 0.2126 * px[i] + 0.7152 * px[i + 1] + 0.0722 * px[i + 2];
+      s += lum; s2 += lum * lum; br += px[i + 2] - px[i]; n++;
+      if (x > 0 && y > 0 && x < W - 1 && y < H - 1) {
+        let k = 8 * L[y * W + x];
+        for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (dx || dy) k -= L[(y + dy) * W + x + dx];
+        e += Math.max(0, Math.min(255, k));
+      }
+    }
+    const m = s / n;
+    out[name] = { lum: +m.toFixed(1), contrast: +Math.sqrt(Math.max(0, s2 / n - m * m)).toFixed(1), blue_minus_red: +(br / n).toFixed(1), edges: +(e / n).toFixed(2) };
+  }
+  const keys = ['lum', 'contrast', 'blue_minus_red', 'edges'];
+  const tol = { lum: 0.15, contrast: 0.3, blue_minus_red: 0.3, edges: 0.5 };          // allowed relative gap
+  let rows = '<tr><th>zone</th>' + keys.map(k => `<th>${k} ref</th><th>live</th>`).join('') + '</tr>', fails = 0;
+  for (const z of Object.keys(ZONES)) {
+    rows += `<tr><td>${z}</td>` + keys.map(k => {
+      const r = REF[z][k], v = out[z][k], ok = Math.abs(v - r) <= Math.max(1.5, Math.abs(r) * tol[k]);
+      if (!ok) fails++;
+      return `<td>${r}</td><td class="${ok ? 'ok' : 'bad'}">${v}</td>`;
+    }).join('') + '</tr>';
+  }
+  document.getElementById('t').innerHTML = rows;
+  window.__vibe = { live: out, fails, px: [W, H] };
+  return window.__vibe;
+}
+</script>
+</body>
+</html>
