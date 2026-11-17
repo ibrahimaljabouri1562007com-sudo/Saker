@@ -124,7 +124,7 @@
       lines.push({ on: p.received_on, at: p.created_at || '', kind: 'deposit', in_cents: p.amount_cents, out_cents: 0, deposit: p });
       if (p.voided_at) lines.push({ on: dayOf(p.voided_at), at: p.voided_at, kind: 'deposit-reversed', in_cents: 0, out_cents: p.amount_cents, deposit: p });
     }
-    for (const v of vouchers) lines.push({ on: v.on, at: v.created_at || '', kind: v.kind, voucher: v,
+    for (const v of vouchers) lines.push({ on: v.issued_on, at: v.created_at || '', kind: v.kind, voucher: v,
       in_cents: v.kind === 'reversal' ? v.amount_cents : 0, out_cents: v.kind === 'settlement' ? v.amount_cents : 0 });
     // time order; within the same second, the order the books allow: a deposit, then its uses, then their reversals, and a
     // deposit can only be reversed once nothing of it is in use (so it comes last); vouchers by their number

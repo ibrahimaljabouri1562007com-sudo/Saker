@@ -1,0 +1,116 @@
+<!doctype html>
+<!-- صقر · B5 demo loader (2026-11-17). Puts the demo (data/demo.js + the 35 dummy PDFs in docs/) into the DATABASE
+     through the real door — the same guarded functions and the same vault the app uses — as the signed-in Admin:
+     upload each file → create the contract → box its installments → finish it at the gate → its notes → its payments.
+     Then the health audit. Sign in to the app first (as the Admin, ?backend=sb), then open this page on the same address.
+     It refuses to run on a database that already has contracts (no double load). Demo data only — never real firms. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>صقر · demo loader</title>
+<style>
+  :root { --bg: #0C1724; --text: #E6EAF0; --dim: #8C98A9; --ok: #8FBBA2; --bad: #DE9088; }
+  body { margin: 0; padding: 24px; background: var(--bg); color: var(--text); font: 14px/1.5 ui-monospace, Consolas, monospace; }
+  button { font: inherit; padding: 8px 16px; border-radius: 999px; border: 0; background: var(--text); color: var(--bg); cursor: pointer; }
+  button:disabled { opacity: 0.4; cursor: default; }
+  pre { white-space: pre-wrap; }
+  .ok { color: var(--ok); } .bad { color: var(--bad); } .dim { color: var(--dim); }
+</style>
+</head>
+<body>
+<h1>صقر · demo loader</h1>
+<p class="dim">Loads the demo into the database through the guarded functions, as the signed-in Admin.</p>
+<button id="go" disabled>Load the demo</button>
+<pre id="log"></pre>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="../data/demo.js"></script>
+<script>
+(async () => {
+  const URL = 'https://ayrijizubulczzympslg.supabase.co', KEY = 'sb_publishable_nh5rSbaoQrrL8NIHmCjMQQ_-vIz3p-l';
+  const sb = supabase.createClient(URL, KEY, { auth: { persistSession: true, storageKey: 'saker.auth' } });
+  const out = document.getElementById('log'), go = document.getElementById('go');
+  const log = (s, cls) => { const l = document.createElement('div'); if (cls) l.className = cls; l.textContent = s; out.appendChild(l); window.scrollTo(0, document.body.scrollHeight); };
+  const rpc = async (fn, args) => { const { data, error } = await sb.rpc(fn, args); if (error) throw new Error(`${fn}: ${error.code} ${error.message}`); return data; };
+
+  const { data: ses } = await sb.auth.getSession();
+  if (!ses.session) { log('Not signed in. Sign in to the app first as the Admin (?backend=sb), then reload this page.', 'bad'); return; }
+  const snap = await rpc('app_snapshot');
+  if (!snap.me || snap.me.role !== 'admin') { log(`Signed in as ${ses.session.user.email}, but not as the Admin.`, 'bad'); return; }
+  if ((snap.contracts || []).length) { log(`The database already has ${snap.contracts.length} contracts — nothing loaded (no double load).`, 'bad'); return; }
+  log(`Signed in as ${snap.me.email} (Admin). The database is empty. Ready.`, 'ok');
+  go.disabled = false;
+
+  go.onclick = async () => {
+    go.disabled = true;
+    const D = window.SAKER_DATA, by = t => Object.fromEntries(D[t].map(r => [r.id, r]));
+    const docs = by('documents'), anchors = by('anchors'), firms = by('firms');
+    const newDoc = {}, newAnchor = {}, newInst = {};
+    const t0 = Date.now();
+    const sha256 = async buf => [...new Uint8Array(await crypto.subtle.digest('SHA-256', buf))].map(b => b.toString(16).padStart(2, '0')).join('');
+    // upload one demo file to the vault; returns the card the functions take
+    async function card(docId, anchorId) {
+      const d = docs[docId], res = await fetch('../' + d.file_path);
+      if (!res.ok) throw new Error('missing file ' + d.file_path);
+      const buf = await res.arrayBuffer(), id = crypto.randomUUID();
+      const { error } = await sb.storage.from('documents').upload(`docs/${id}.pdf`, new Blob([buf], { type: 'application/pdf' }), { contentType: 'application/pdf', upsert: false });
+      if (error) throw new Error('upload ' + d.file_name + ': ' + error.message);
+      const c = { id, file_name: d.file_name, pages: d.pages, sha256: await sha256(buf) };
+      if (anchorId) { const a = anchors[anchorId]; c.page = a.page; c.box = a.box || null; }
+      return c;
+    }
+    async function anchorOn(oldAnchorId) {
+      if (!oldAnchorId) return null;
+      if (!newAnchor[oldAnchorId]) {
+        const a = anchors[oldAnchorId];
+        newAnchor[oldAnchorId] = await rpc('add_anchor', { p_document_id: newDoc[a.document_id], p_page: a.page, p_box: a.box || null });
+      }
+      return newAnchor[oldAnchorId];
+    }
+    try {
+      let n = 0;
+      for (const c of D.contracts) {
+        n++;
+        const k = await card(c.document_id);
+        const r = await rpc('create_contract', { p_firm_name: firms[c.firm_id].name, p_ref: c.ref, p_signed_on: c.signed_on || null, p_file: k });
+        newDoc[c.document_id] = r.document_id;
+        const insts = D.installments.filter(i => i.contract_id === c.id);
+        for (const i of insts) {
+          const am = i.amount_anchor_id !== undefined ? i.amount_anchor_id : i.anchor_id, dt = i.date_anchor_id !== undefined ? i.date_anchor_id : i.anchor_id;
+          newInst[i.id] = await rpc('add_installment', { p_contract_id: r.contract_id, p_due_on: i.due_on, p_amount_cents: i.amount_cents,
+            p_amount_anchor_id: await anchorOn(am), p_date_anchor_id: await anchorOn(dt), p_note: null });
+        }
+        const fin = await rpc('finish_contract', { p_contract_id: r.contract_id });
+        const same = c.total_cents == null || fin.sum_cents === c.total_cents;
+        for (const note of D.notes.filter(x => x.contract_id === c.id)) {
+          const a = anchors[note.anchor_id];
+          if (a && !newDoc[a.document_id]) newDoc[a.document_id] = await rpc('add_reference', { p_contract_id: r.contract_id, p_file: await card(a.document_id) });
+          await rpc('add_note', { p_contract_id: r.contract_id, p_installment_id: note.installment_id ? newInst[note.installment_id] : null,
+            p_text: note.text, p_anchor_id: a ? await anchorOn(note.anchor_id) : null });
+        }
+        let pays = 0;
+        for (const p of D.payments.filter(x => x.contract_id === c.id)) {
+          const split = D.allocations.filter(a => a.payment_id === p.id).map(a => ({ installment_id: newInst[a.installment_id], cents: a.amount_cents }));
+          await rpc('record_payment', { p_contract_id: r.contract_id, p_received_on: p.received_on, p_amount_cents: p.amount_cents,
+            p_bank_ref: p.bank_ref, p_receipt: await card(p.proof_document_id, p.proof_anchor_id), p_split: split });
+          pays++;
+        }
+        log(`${String(n).padStart(2)} · ${c.ref} · ${firms[c.firm_id].name} · ${insts.length} installments · gate: ${fin.state}${same ? '' : ' ⚠ total ' + c.total_cents + ' vs ' + fin.sum_cents} · ${pays} payments`, same ? '' : 'bad');
+      }
+      const after = await rpc('app_snapshot'), health = await rpc('health_audit');
+      const cnt = t => (after[t] || []).length;
+      log(`\nDone in ${Math.round((Date.now() - t0) / 1000)} s.`, 'ok');
+      log(`firms ${cnt('firms')} · contracts ${cnt('contracts')} · installments ${cnt('installments')} · documents ${cnt('documents')} · payments ${cnt('payments')} · allocations ${cnt('allocations')} · notes ${cnt('notes')}`);
+      log(`demo had: firms ${D.firms.length} · contracts ${D.contracts.length} · installments ${D.installments.length} · documents ${D.documents.length} · payments ${D.payments.length} · allocations ${D.allocations.length} · notes ${D.notes.length}`, 'dim');
+      log(`health audit: ${health.length ? health.length + ' BREAKS — ' + JSON.stringify(health) : '0 breaks'}`, health.length ? 'bad' : 'ok');
+      window.__loadResult = { counts: Object.fromEntries(['firms','contracts','installments','documents','payments','allocations','notes'].map(t => [t, cnt(t)])), health: health.length };
+    } catch (err) {
+      log('\nSTOPPED: ' + err.message, 'bad');
+      log('Everything before this line is in the database (each step is its own all-or-nothing call). Nothing half-written.', 'dim');
+      window.__loadResult = { error: err.message };
+    }
+  };
+})();
+</script>
+</body>
+</html>

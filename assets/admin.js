@@ -33,6 +33,8 @@
   const esc = s => X.esc(s == null ? '' : s);
   const money = c => X.money(c);
   const L = () => S.local;
+  // a refusal from the database (B5): its own sentence, without the internal prefix
+  const refusal = err => String((err && err.message) || err).replace(/^صقر:\s*/, '');
   // reads see EVERY contract (the demo's + the Admin's own; removed rows are already left out); writes still go
   // through the store, and only the Admin's own rows are editable in phase A (own() tells them apart)
   const D = () => S.data();
@@ -575,7 +577,7 @@
     const split = list.map(x => ({ id: x.i.id, cents: P.split[x.i.id] || 0 }));
     try {
       if (fromCredit) {
-        const v = S.applyCredit({ contractId: c.id, amountCents: amt, split });   // the system writes the settlement voucher
+        const v = await S.applyCredit({ contractId: c.id, amountCents: amt, split });   // the system writes the settlement voucher
         A.flash = { cid: c.id, text: t.savedCredit(money(amt), no4(v.no)) };
       } else {
         await S.recordPayment({ contractId: c.id, receivedOn: iso, amountCents: amt, bankRef: P.ref, fileName: P.file.name,
@@ -593,7 +595,7 @@
   function payHistory(c) {
     const t = T().pay, B = X.T;
     const items = paymentsOf(c.id).map(p => ({ on: p.received_on, p }))
-      .concat(L().vouchers.filter(v => v.kind === 'settlement' && v.contract_id === c.id).map(v => ({ on: v.on, v })))
+      .concat(L().vouchers.filter(v => v.kind === 'settlement' && v.contract_id === c.id).map(v => ({ on: v.issued_on, v })))
       .sort((a, b) => a.on.localeCompare(b.on));
     const split = lines => lines.map(a => { const i = instById(a.installment_id); return `${T().instN(i ? i.seq : '?')} · ${money(a.amount_cents != null ? a.amount_cents : a.cents)}`; }).join('  ·  ');
     const twoStep = (id, act, yes) => A.revConfirm === id
@@ -1028,7 +1030,8 @@
     };
     let gate = '';
     if (draft && A.ask === 'empty') gate = `<div class="ws-gate bad">${esc(t.gateEmpty)}</div>`;
-    if (draft && A.ask === 'gap') gate = `<div class="ws-gate bad"><p>${esc(t.gateGap(money(chk.sum_cents), money(chk.total_cents), money(Math.abs(chk.gap_cents)), chk.gap_cents > 0))}</p><p class="ws-gate-fix">${esc(t.gateFix)}</p></div>`;
+    if (draft && A.gateErr) gate = `<div class="ws-gate bad"><p>${esc(A.gateErr)}</p></div>`;   // the database refused (its words)
+    else if (draft && A.ask === 'gap') gate = `<div class="ws-gate bad"><p>${esc(t.gateGap(money(chk.sum_cents), money(chk.total_cents), money(Math.abs(chk.gap_cents)), chk.gap_cents > 0))}</p><p class="ws-gate-fix">${esc(t.gateFix)}</p></div>`;
     if (draft && A.ask === 'no-total') gate = `<div class="ws-gate"><p>${esc(t.noTotalQ)}</p>
         <div class="adm-actions"><button type="button" class="adm-btn primary" data-a="finish-sum">${esc(t.noTotalYes(money(chk.sum_cents)))}</button>
         <button type="button" class="adm-btn" data-a="ask-close">${esc(t.noTotalBack)}</button></div></div>`;
@@ -1352,7 +1355,7 @@
       note: el('note') ? el('note').value.trim() : '' };
   };
 
-  function savePop() {
+  async function savePop() {
     const t = T(), P = A.pop, v = popValues(), c = contract(A.cid);
     P.values = v; P.err = {};
     if (P.kind === 'ref') return saveRef(P, v, c);
@@ -1364,33 +1367,35 @@
     if (P.kind === 'inst' && !due) P.err.date = v.date.trim() ? t.badDateFmt : t.badDate;
     else if (P.kind === 'inst' && dueLaw(c, due)) P.err.date = dueLaw(c, due);
     if (Object.keys(P.err).length) return pop();
-    if (P.moved) S.moveAnchor(P.anchorId, P.page, P.box);           // the redrawn box takes its new place now
+    try {
+    if (P.moved) await S.moveAnchor(P.anchorId, P.page, P.box);           // the redrawn box takes its new place now
     if (P.kind === 'total') {
-      const a = P.editTotal ? anchorOf(c.total_anchor_id) : S.anchor(c.document_id, P.page, P.box);
-      S.setTotal(c.id, amt, a.id);
+      const a = P.editTotal ? anchorOf(c.total_anchor_id) : await S.anchor(c.document_id, P.page, P.box);
+      await S.setTotal(c.id, amt, a.id);
     } else if (P.instId) {
       // this box's parts follow the switches; a part switched off here is left without a box (unless it had its own)
-      S.editInstallment(P.instId, { due_on: due, amount_cents: amt, note: v.note });
       const p = parts(instById(P.instId)), aid = P.anchorId;
-      S.setParts(P.instId, {
+      await S.editInstallment(P.instId, { due_on: due, amount_cents: amt, note: v.note });
+      await S.setParts(P.instId, {
         amount_anchor_id: inc.amount ? aid : p.amount_anchor_id === aid ? null : p.amount_anchor_id,
         date_anchor_id: inc.date ? aid : p.date_anchor_id === aid ? null : p.date_anchor_id });
     } else if (P.target && P.target !== 'new') {
       // the missing part of an installment already on the schedule
-      S.editInstallment(P.target, { due_on: due, amount_cents: amt, note: v.note });
-      const a = S.anchor(c.document_id, P.page, P.box), next = {};
+      await S.editInstallment(P.target, { due_on: due, amount_cents: amt, note: v.note });
+      const a = await S.anchor(c.document_id, P.page, P.box), next = {};
       if (inc.amount) next.amount_anchor_id = a.id;
       if (inc.date) next.date_anchor_id = a.id;
-      S.setParts(P.target, next);
+      await S.setParts(P.target, next);
     } else {
-      const a = S.anchor(c.document_id, P.page, P.box);
-      S.addInstallment(c.id, { due_on: due, amount_cents: amt, note: v.note,
+      const a = await S.anchor(c.document_id, P.page, P.box);
+      await S.addInstallment(c.id, { due_on: due, amount_cents: amt, note: v.note,
         amount_anchor_id: inc.amount ? a.id : null, date_anchor_id: inc.date ? a.id : null });
     }
+    } catch (err) { P.err = { amount: refusal(err) }; return pop(); }
     A.pop = null; A.ask = null;
     pop(); marks(); side();
   }
-  function saveRef(P, v, c) {
+  async function saveRef(P, v, c) {
     const t = T(), { target, instId } = refPlace(P);
     const mine = instId && own('installments', instId);
     const hasAmt = target === 'amount' && mine && c.state === 'draft', hasDate = target === 'date' && mine;
@@ -1400,16 +1405,18 @@
     if (hasDate && !due) P.err.date = v.date.trim() ? t.badDateFmt : t.badDate;
     else if (hasDate && dueLaw(c, due)) P.err.date = dueLaw(c, due);
     if (Object.keys(P.err).length) return pop();
-    if (P.moved) S.moveAnchor(P.anchorId, P.page, P.box);
-    const aid = P.anchorId || S.anchor(ws.doc.id, P.page, P.box).id;
+    try {
+    if (P.moved) await S.moveAnchor(P.anchorId, P.page, P.box);
+    const aid = P.anchorId || (await S.anchor(ws.doc.id, P.page, P.box)).id;
     if (target === 'note') {
-      if (P.noteId) S.editNote(P.noteId, v.note);
-      else S.addNote(c.id, { installment_id: instId, text: v.note, anchor_id: aid });
+      if (P.noteId) await S.editNote(P.noteId, v.note);
+      else await S.addNote(c.id, { installment_id: instId, text: v.note, anchor_id: aid });
     } else {
-      if (!P.linkId) S.link(c.id, { document_id: ws.doc.id, anchor_id: aid, target, installment_id: instId });
-      if (hasAmt) S.editValues(instId, { amount_cents: amt });
-      if (hasDate) S.editValues(instId, { due_on: due });
+      if (!P.linkId) await S.link(c.id, { document_id: ws.doc.id, anchor_id: aid, target, installment_id: instId });
+      if (hasAmt) await S.editValues(instId, { amount_cents: amt });
+      if (hasDate) await S.editValues(instId, { due_on: due });
     }
+    } catch (err) { P.err = { note: refusal(err) }; return pop(); }
     A.pop = null;
     pop(); marks(); side();
   }
@@ -1439,13 +1446,17 @@
     if (ws.memo) V.focus({ page: a.page, box: a.box }, ws.memo, ws.scroll, true);
   }
 
-  function finish(onSum) {
+  async function finish(onSum) {
     const c = contract(A.cid), chk = C.scheduleCheck(instsOf(c.id), c.total_cents);
     A.pop = null; pop();
     if (chk.state === 'empty') A.ask = 'empty';
     else if (chk.state === 'short' || chk.state === 'over') A.ask = 'gap';
     else if (chk.state === 'no-total' && !onSum) A.ask = 'no-total';
-    else { S.finish(c.id); A.ask = null; A.done = true; return render(main, X); }
+    else {
+      A.gateErr = null;
+      try { await S.finish(c.id); } catch (err) { A.ask = null; A.gateErr = refusal(err); side(); return; }
+      A.ask = null; A.done = true; return render(main, X);
+    }
     side();
     const g = ws.side.querySelector('.ws-gate');
     if (g) g.scrollIntoView({ block: 'nearest' });
@@ -1480,19 +1491,20 @@
       if (a === 'cr-dep-rev') { A.revConfirm = b.dataset.p; return refresh(); }
       if (a === 'cr-dep-yes') {
         const p = L().payments.find(x => x.id === b.dataset.p);
-        S.reverseDeposit(p.id); A.revConfirm = null; A.paneFlash = T().cr.depGone; return refresh();
+        return S.reverseDeposit(p.id).then(() => { A.revConfirm = null; A.paneFlash = T().cr.depGone; refresh(); }, err => { A.revConfirm = null; A.paneFlash = refusal(err); refresh(); });
       }
       if (a === 'cr-use-yes') {
-        const v = L().vouchers.find(x => x.id === b.dataset.p), r = S.reverseApplication(v.id);
-        A.revConfirm = null; A.paneFlash = T().pay.reversedCredit(no4(r.no)); return refresh();
+        const v = L().vouchers.find(x => x.id === b.dataset.p);
+        return Promise.resolve(S.reverseApplication(v.id)).then(r => { A.revConfirm = null; A.paneFlash = T().pay.reversedCredit(no4(r.no)); refresh(); },
+          err => { A.revConfirm = null; A.paneFlash = refusal(err); refresh(); });
       }
       if (a === 'pay-auto') { A.payF.manual = false; autoSplit(contract(A.cid)); return paintSplit(); }
       if (a === 'pay-view') return payViewDoc(b.dataset.p);
       if (a === 'pay-rev') { A.revConfirm = b.dataset.p; A.flash = null; return refresh(); }
       if (a === 'pay-rev-no') { A.revConfirm = null; return refresh(); }
       if (a === 'pay-rev-yes') {
-        S.reversePayment(b.dataset.p); A.revConfirm = null; A.paneFlash = T().pay.reversed;
-        return refresh();
+        return Promise.resolve(S.reversePayment(b.dataset.p)).then(() => { A.revConfirm = null; A.paneFlash = T().pay.reversed; refresh(); },
+          err => { A.revConfirm = null; A.paneFlash = refusal(err); refresh(); });
       }
       if (a === 'doc') return X.openDoc(b.dataset.k, b.dataset.i, b.dataset.n, b.dataset.part);   // the Boss's document panel
       if (a === 'clear') { Object.assign(Q, { text: '', month: '', firm: '' }); keepQ(); return home(); }
@@ -1518,10 +1530,11 @@
       if (a === 'edit-total') return openEditTotal();
       if (a === 'edit-link') { const l = linksOf(A.cid).find(x => x.id === b.dataset.l); return openOn(l.anchor_id, { kind: 'ref', linkId: l.id }); }
       if (a === 'edit-note') { const n = D().notes.find(x => x.id === b.dataset.n); return openOn(n.anchor_id, { kind: 'ref', noteId: n.id }); }
-      if (a === 'remove') { S.removeInstallment(b.dataset.i); A.pop = null; pop(); marks(); return side(); }
-      if (a === 'remove-total') { S.clearTotal(A.cid); A.pop = null; A.ask = null; pop(); marks(); return side(); }
-      if (a === 'remove-link') { S.removeLink(b.dataset.l); A.pop = null; pop(); marks(); return side(); }
-      if (a === 'remove-note') { S.removeNote(b.dataset.n); A.pop = null; pop(); marks(); return side(); }
+      const after = () => { A.pop = null; pop(); marks(); side(); }, refused = err => { if (A.pop) { A.pop.err = { amount: refusal(err) }; pop(); } };
+      if (a === 'remove') return Promise.resolve(S.removeInstallment(b.dataset.i)).then(after, refused);
+      if (a === 'remove-total') return Promise.resolve(S.clearTotal(A.cid)).then(() => { A.ask = null; after(); }, refused);
+      if (a === 'remove-link') return Promise.resolve(S.removeLink(b.dataset.l)).then(after, refused);
+      if (a === 'remove-note') return Promise.resolve(S.removeNote(b.dataset.n)).then(after, refused);
       if (a === 'locate') { const p = parts(instById(b.dataset.i)); return locate(p.amount_anchor_id || p.date_anchor_id); }
       if (a === 'locate-total') return locate(contract(A.cid).total_anchor_id);
       if (a === 'locate-a') return locate(b.dataset.an);

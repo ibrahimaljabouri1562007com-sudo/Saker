@@ -200,8 +200,8 @@ test('Credit pays on the day it is APPLIED, not the day it was deposited (Ibrahi
 
 test('The credit ledger: deposit 50,000 → use 12,000 → reversal 12,000 = 50,000 · 38,000 · 50,000; balance = live rows', () => {
   const dep = creditFacts(false).payments[0];
-  const vouchers = [{ id: 'v1', no: 1, kind: 'settlement', on: '2026-11-13', amount_cents: usd(12000), created_at: '2026-11-13T10:42' },
-                    { id: 'v2', no: 2, kind: 'reversal', on: '2026-11-14', amount_cents: usd(12000), reverses: 'v1', created_at: '2026-11-14T09:00' }];
+  const vouchers = [{ id: 'v1', no: 1, kind: 'settlement', issued_on: '2026-11-13', amount_cents: usd(12000), created_at: '2026-11-13T10:42' },
+                    { id: 'v2', no: 2, kind: 'reversal', issued_on: '2026-11-14', amount_cents: usd(12000), reverses: 'v1', created_at: '2026-11-14T09:00' }];
   const L = C.creditLedger([dep], vouchers);
   assert.deepStrictEqual(L.lines.map(l => [l.kind, l.balance_cents]), [['deposit', usd(50000)], ['settlement', usd(38000)], ['reversal', usd(50000)]]);
   // the same number from the live rows, before and after the reversal
@@ -211,8 +211,8 @@ test('The credit ledger: deposit 50,000 → use 12,000 → reversal 12,000 = 50,
   // the same second (found live, 2026-11-14): use reversed, then the deposit reversed — never a negative balance on the way
   const same = '2026-11-14T19:37:05';
   const L2 = C.creditLedger([{ ...dep, voided_at: same }],
-    [{ id: 'v1', no: 1, kind: 'settlement', on: '2026-11-14', amount_cents: usd(25000), created_at: '2026-11-14T19:36:34' },
-     { id: 'v2', no: 2, kind: 'reversal', on: '2026-11-14', amount_cents: usd(25000), reverses: 'v1', created_at: same }]);
+    [{ id: 'v1', no: 1, kind: 'settlement', issued_on: '2026-11-14', amount_cents: usd(25000), created_at: '2026-11-14T19:36:34' },
+     { id: 'v2', no: 2, kind: 'reversal', issued_on: '2026-11-14', amount_cents: usd(25000), reverses: 'v1', created_at: same }]);
   assert.deepStrictEqual(L2.lines.map(l => [l.kind, l.balance_cents]),
     [['deposit', usd(50000)], ['settlement', usd(25000)], ['reversal', usd(50000)], ['deposit-reversed', 0]]);
   assert.ok(L2.lines.every(l => l.balance_cents >= 0));

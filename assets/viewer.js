@@ -21,7 +21,8 @@
     });
   }
   // a file the Admin uploaded in this browser ('local:<doc id>', phase A) comes from the store; the rest by URL
-  const load = path => (cache[path] = cache[path] || lib().then(p => (path.startsWith('local:') && root.SakerStore
+  const owned = path => (root.SakerStore && root.SakerStore.ownsPath ? root.SakerStore.ownsPath(path) : path.startsWith('local:'));
+  const load = path => (cache[path] = cache[path] || lib().then(p => (owned(path) && root.SakerStore
     ? root.SakerStore.file(path).then(buf => p.getDocument({ data: new Uint8Array(buf) }).promise)
     : p.getDocument(path).promise)));
 

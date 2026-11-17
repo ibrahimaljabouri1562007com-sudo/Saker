@@ -20,7 +20,7 @@
     set(v) { try { v ? sessionStorage.setItem('saker.session', v) : sessionStorage.removeItem('saker.session'); } catch (e) { /* private mode */ } },
   };
   const state = {
-    user: session.get(),              // demo session; phase ⑤ replaces it with Supabase Auth
+    user: S.remote ? null : session.get(),   // demo session · on the database: the real account (S.ready / S.signIn)
     lang: store.get('lang', 'ar'),
     role: store.get('role', 'boss'),
     y: TY, m: TM,                    // the month lens: today's month by default
@@ -58,9 +58,12 @@
     document.documentElement.dir = T.dir;
     if (!state.user) {
       document.title = T.brand;
-      window.SakerSignin.show(T, email => arrive(() => { state.user = email; session.set(email); window.SakerSignin.hide(); render(); }));
+      // on the database the password is checked for real (the 6-digit second step arrives in B6)
+      window.SakerSignin.verify = S.remote ? (email, pw) => S.signIn(email, pw).then(m => { applyMe(m); return m; }) : null;
+      window.SakerSignin.show(T, email => arrive(() => { state.user = email; if (!S.remote) session.set(email); window.SakerSignin.hide(); render(); }));
       return;
     }
+    document.body.classList.toggle('is-boss-account', !!(S.remote && S.me && S.me.role === 'boss'));
     document.title = `${T.brand} · ${monthLabel()}`;
     $('#brand-name').textContent = state.lang === 'ar' ? 'صقر' : 'SAKER';
     $('#lang').textContent = state.lang === 'ar' ? 'EN' : 'ع';
@@ -226,12 +229,12 @@
       <article class="voucher v-${v.kind}" dir="${T.dir}">
         <header><span class="v-kind">${esc(v.kind === 'reversal' ? T.cr.vReversal : T.cr.vSettlement)}</span><b class="v-no" dir="ltr">№ ${no4(v.no)}</b></header>
         <dl>
-          ${pair(T.cr.date, esc(date(v.on)))}${pair(T.cr.firm, esc(firm.name || ''))}${pair(T.cr.contract, esc(c.ref || ''), true)}
+          ${pair(T.cr.date, esc(date(v.issued_on)))}${pair(T.cr.firm, esc(firm.name || ''))}${pair(T.cr.contract, esc(c.ref || ''), true)}
           ${pair(T.cr.amount, money(v.amount_cents), true)}
-          ${pair(T.cr.before, money(v.balance_before), true)}${pair(T.cr.after, money(v.balance_after), true)}
+          ${pair(T.cr.before, money(v.balance_before_cents), true)}${pair(T.cr.after, money(v.balance_after_cents), true)}
           ${v.reverses ? pair(T.cr.reverses, '№ ' + no4(find('vouchers', v.reverses).no || 0), true) : ''}
           ${v.reversed_by ? pair(T.cr.reversedBy, '№ ' + no4(find('vouchers', v.reversed_by).no || 0), true) : ''}
-          ${pair(T.cr.by, esc(v.created_by || ''), true)}${pair(T.cr.at, esc(String(v.created_at || '').replace('T', ' ')), true)}
+          ${pair(T.cr.by, esc((S.who ? S.who(v.created_by) : v.created_by) || ''), true)}${pair(T.cr.at, esc(String(v.created_at || '').replace('T', ' ')), true)}
         </dl>
         <table><tbody>${rows}</tbody></table>
         <footer>${esc(T.cr.foot)}</footer>
@@ -433,7 +436,7 @@
       el.classList.toggle('on', on); return;
     }
     if (el.id === 'export') return exportReport();
-    if (el.id === 'signout') { state.user = null; session.set(null); state.details = false; state.open = null; V.close(); return render(); }
+    if (el.id === 'signout') { if (S.remote) S.signOut(); state.user = null; session.set(null); state.details = false; state.open = null; V.close(); return render(); }
     if (el.id === 'si-lang') { state.lang = state.lang === 'ar' ? 'en' : 'ar'; store.set('lang', state.lang); return render(); }
     if (el.id === 'lang') { state.lang = state.lang === 'ar' ? 'en' : 'ar'; store.set('lang', state.lang); V.close(); return render(); }
     if (el.id === 'role-boss' || el.id === 'role-admin') { state.role = el.id === 'role-boss' ? 'boss' : 'admin'; store.set('role', state.role); V.close(); return render(); }
@@ -442,7 +445,15 @@
   });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && state.picker) { state.picker = false; render(); } });
 
-  render();
+  // on the database: the account decides the view (a Boss account never sees the Admin side or the build switch)
+  function applyMe(m) {
+    if (!m) return;
+    if (m.role === 'boss') state.role = 'boss';
+    if (m.lang && !store.get('lang', '')) state.lang = m.lang;
+  }
+  // on the database: wait to learn whether a session is already open (no sign-in flash when it is)
+  if (S.remote) S.ready.then(m => { if (m) { applyMe(m); state.user = m.email; } render(); });
+  else render();
   paintScene();                                                     // ready before any sign-in hands over
   window.__saker = { state, render, get ix() { fresh(); return ix; }, today };   // for inspection while we build
 })();

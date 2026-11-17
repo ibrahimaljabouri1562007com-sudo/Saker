@@ -12,6 +12,12 @@
 
   let L = blank();
   try { L = Object.assign(blank(), JSON.parse(localStorage.getItem(KEY) || 'null') || {}); } catch (e) { /* private mode: memory only */ }
+  // B5 (2026-11-17): vouchers carry the database's names — issued_on, balance_before_cents / balance_after_cents
+  for (const v of L.vouchers) {
+    if (v.on !== undefined && v.issued_on === undefined) { v.issued_on = v.on; delete v.on; }
+    if (v.balance_before !== undefined && v.balance_before_cents === undefined) { v.balance_before_cents = v.balance_before; delete v.balance_before; }
+    if (v.balance_after !== undefined && v.balance_after_cents === undefined) { v.balance_after_cents = v.balance_after; delete v.balance_after; }
+  }
   let version = 0, merged = null;
   const save = () => { version++; merged = null; try { localStorage.setItem(KEY, JSON.stringify(L)); } catch (e) { /* quota / private */ } };
 
@@ -80,6 +86,7 @@
     get version() { return version; },
     data,
     file,
+    ownsPath: p => p.startsWith('local:'),                 // the files this store serves (the rest come by URL)
     local: L,                                               // read-only use: the Admin's own rows (drafts, history)
     setUser(u) { if (u) user = u; },
 
@@ -270,8 +277,8 @@
         for (const dp of deps) { if (!need) break; const take = Math.min(dp.left, need); if (take > 0) { lines.push({ installment_id: x.id, payment_id: dp.p.id, cents: take }); dp.left -= take; need -= take; } }
         if (need) throw new Error('credit: deposits do not cover the split');
       }
-      const v = insert('vouchers', { no: ++L.vseq, kind: 'settlement', firm_id: c.firm_id, contract_id: c.id, on, amount_cents: amountCents,
-        lines, balance_before: before, balance_after: before - amountCents, reverses: null, reversed_by: null });
+      const v = insert('vouchers', { no: ++L.vseq, kind: 'settlement', firm_id: c.firm_id, contract_id: c.id, issued_on: on, amount_cents: amountCents,
+        lines, balance_before_cents: before, balance_after_cents: before - amountCents, reverses: null, reversed_by: null });
       for (const l of lines) insert('allocations', { payment_id: l.payment_id, installment_id: l.installment_id, amount_cents: l.cents, applied_on: on, voucher_id: v.id });
       save(); return v;
     },
@@ -280,8 +287,8 @@
       if (!v || v.kind !== 'settlement' || v.reversed_by) throw new Error('credit: nothing to reverse');
       const before = root.SakerCalc.creditBalance(data(), v.firm_id);
       L.allocations.filter(a => a.voucher_id === v.id && !a.voided_at).forEach(a => update('allocations', a.id, { voided_at: now() }));
-      const r = insert('vouchers', { no: ++L.vseq, kind: 'reversal', firm_id: v.firm_id, contract_id: v.contract_id, on: root.SakerCalc.todayBaghdad(),
-        amount_cents: v.amount_cents, lines: v.lines, balance_before: before, balance_after: before + v.amount_cents, reverses: v.id, reversed_by: null });
+      const r = insert('vouchers', { no: ++L.vseq, kind: 'reversal', firm_id: v.firm_id, contract_id: v.contract_id, issued_on: root.SakerCalc.todayBaghdad(),
+        amount_cents: v.amount_cents, lines: v.lines, balance_before_cents: before, balance_after_cents: before + v.amount_cents, reverses: v.id, reversed_by: null });
       update('vouchers', v.id, { reversed_by: r.id });
       save(); return r;
     },

@@ -43,7 +43,14 @@
       const badE = !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email.value.trim());
       const badP = !f.password.value;
       flag(f.password, badP); if (flag(f.email, badE) || badP) return;
-      st.email = f.email.value.trim(); st.step = 'code'; draw();
+      st.email = f.email.value.trim();
+      if (root.SakerSignin.verify) {                          // the database (B5): a real account, checked now
+        const pw = f.password.value; f.classList.add('busy');
+        root.SakerSignin.verify(st.email, pw).then(() => { st.leaving = true; st.done(st.email); },
+          () => { f.classList.remove('busy'); flag(f.password, true); f.password.value = ''; });
+        return;
+      }
+      st.step = 'code'; draw();
     } else {
       if (flag(f.code, !/^\d{6}$/.test(f.code.value))) return;
       st.step = 'creds'; st.leaving = true;
