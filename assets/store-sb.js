@@ -104,11 +104,19 @@
   const fail = e => Object.assign(new Error(String((e && e.message) || e).replace(/^صقر:\s*/, '')), { code: e && e.code });
 
   // ── writing: one function, then the fresh snapshot ──
+  // one guarded function per step; the snapshot is reloaded after it — or, inside batch(), once at the end
+  // (2026-11-18: a box + its installment was 4 trips to Frankfurt, one after another; now 3)
+  let batching = 0;
   async function call(fn, args) {
     const { data, error } = await sb.rpc(fn, args);
     if (error) throw fail(error);
-    await load();
+    if (!batching) await load();
     return data;
+  }
+  async function batch(fn) {
+    batching++;
+    try { return await fn(); }
+    finally { if (--batching === 0) await load(); }            // also after a refusal: the screen shows what is saved
   }
   const find = (t, id) => raw[t].find(r => r.id === id) || null;
   const round = box => (box ? box.map(v => Math.round(v * 10000) / 10000) : null);
@@ -210,7 +218,8 @@
       return find('contracts', r.contract_id);
     },
     async anchor(docId, page, box) {
-      return find('anchors', await call('add_anchor', { p_document_id: docId, p_page: page, p_box: round(box) }));
+      const id = await call('add_anchor', { p_document_id: docId, p_page: page, p_box: round(box) });
+      return find('anchors', id) || { id };                   // inside batch() the row arrives with the final reload
     },
     async moveAnchor(id, page, box) { await call('move_anchor', { p_anchor_id: id, p_page: page, p_box: round(box) }); },
     async clearTotal(contractId) { await call('clear_total', { p_contract_id: contractId }); },
@@ -232,7 +241,7 @@
       return find('documents', await call('add_reference', { p_contract_id: contractId, p_file: card }));
     },
     async link(contractId, { document_id, anchor_id, target, installment_id }) {
-      return find('links', await call('add_link', { p_contract_id: contractId, p_document_id: document_id, p_anchor_id: anchor_id,
+      return (r => find('links', r) || { id: r })(await call('add_link', { p_contract_id: contractId, p_document_id: document_id, p_anchor_id: anchor_id,
         p_target: target, p_installment_id: installment_id || null }));
     },
     async removeLink(id) { await call('remove_link', { p_link_id: id }); },
@@ -268,6 +277,7 @@
     // the demo loader and the health check use these directly
     client: sb,
     reload: load,
+    batch,
     upload,
   };
   root.SakerStore = api;

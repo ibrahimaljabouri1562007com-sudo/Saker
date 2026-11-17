@@ -88,6 +88,7 @@
     file,
     ownsPath: p => p.startsWith('local:'),                 // the files this store serves (the rest come by URL)
     local: L,                                               // read-only use: the Admin's own rows (drafts, history)
+    batch: async fn => fn(),                                     // the database store reloads once per batch; here nothing to do
     setUser(u) { if (u) user = u; },
 
     firmByName(name) {

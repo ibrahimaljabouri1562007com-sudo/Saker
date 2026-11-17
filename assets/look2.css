@@ -25,6 +25,9 @@ html[data-look="2"] body:not(.signing) {
   background-attachment: fixed;
 }
 
+/* ── rendering (2026-11-18): no frosted-glass blur on the big, still panels (the three numbers, «التفاصيل», the firm list)
+   — what lies behind them is already soft or plain ink, so the blur showed nothing (compared on/off) yet cost the
+   graphics chip a re-blur on every scroll/hover. The bar (content scrolls under it) and the picker keep theirs. ── */
 /* ── the bar: translucent, a hairline, the brand with presence, controls of one family ── */
 html[data-look="2"] body:not(.signing) .bar {
   height: 66px; background: var(--lk-bar); border-bottom: 1px solid var(--lk-edge);
@@ -77,7 +80,7 @@ html[data-look="2"] body:not(.signing) .sky-row {
   background: linear-gradient(180deg, var(--lk-glass-2), var(--lk-glass));
   border: 1px solid var(--lk-edge); border-radius: 22px; padding: 34px 12px;
   box-shadow: 0 34px 70px -28px var(--lk-shadow), inset 0 1px 0 var(--lk-shine);
-  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+
 }
 html[data-look="2"] body:not(.signing) .sky-cell + .sky-cell { border-inline-start-color: var(--lk-edge); }
 html[data-look="2"] body:not(.signing) .sky-label { font-size: 15px; letter-spacing: 0.02em; color: var(--text-2); }
@@ -100,7 +103,7 @@ html[data-look="2"] body:not(.signing) .picker {
 /* ── one button family: the «التفاصيل» pill ── */
 html[data-look="2"] body:not(.signing) .sky-more {
   border-radius: 999px; padding: 10px 26px; background: var(--lk-glass); border: 1px solid var(--lk-edge-2);
-  box-shadow: inset 0 1px 0 var(--lk-shine); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  box-shadow: inset 0 1px 0 var(--lk-shine);
 }
 html[data-look="2"] body:not(.signing) .sky-more:hover { background: var(--lk-glass-2); border-color: var(--silver); }
 
@@ -108,7 +111,7 @@ html[data-look="2"] body:not(.signing) .sky-more:hover { background: var(--lk-gl
 html[data-look="2"] body:not(.signing) .firms {
   background: linear-gradient(180deg, var(--lk-glass-2), var(--lk-glass)); border: 1px solid var(--lk-edge); border-radius: 20px;
   box-shadow: 0 30px 60px -30px var(--lk-shadow), inset 0 1px 0 var(--lk-shine);
-  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+
 }
 html[data-look="2"] body:not(.signing) .firm { border-bottom-color: var(--lk-edge); }
 html[data-look="2"] body:not(.signing) .firm-bar:hover { background: var(--lk-glass); }

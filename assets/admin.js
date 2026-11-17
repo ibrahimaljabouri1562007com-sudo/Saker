@@ -1372,6 +1372,11 @@
       note: el('note') ? el('note').value.trim() : '' };
   };
 
+  // the form answers at once: «جارٍ الحفظ…» on its button while the database works (it used to look frozen for ~1 s)
+  function popBusy() {
+    const b = ws && ws.memo && ws.memo.wrap.querySelector('.ws-pop [type=submit]');
+    if (b) { b.disabled = true; b.textContent = T().saving; }
+  }
   async function savePop() {
     const t = T(), P = A.pop, v = popValues(), c = contract(A.cid);
     P.values = v; P.err = {};
@@ -1384,7 +1389,9 @@
     if (P.kind === 'inst' && !due) P.err.date = v.date.trim() ? t.badDateFmt : t.badDate;
     else if (P.kind === 'inst' && dueLaw(c, due)) P.err.date = dueLaw(c, due);
     if (Object.keys(P.err).length) return pop();
-    try {
+    if (P.saving) return;                                                   // one press, one save
+    P.saving = true; popBusy();
+    try { await S.batch(async () => {
     if (P.moved) await S.moveAnchor(P.anchorId, P.page, P.box);           // the redrawn box takes its new place now
     if (P.kind === 'total') {
       const a = P.editTotal ? anchorOf(c.total_anchor_id) : await S.anchor(c.document_id, P.page, P.box);
@@ -1408,7 +1415,7 @@
       await S.addInstallment(c.id, { due_on: due, amount_cents: amt, note: v.note,
         amount_anchor_id: inc.amount ? a.id : null, date_anchor_id: inc.date ? a.id : null });
     }
-    } catch (err) { P.err = { amount: refusal(err) }; return pop(); }
+    }); } catch (err) { P.saving = false; P.err = { amount: refusal(err) }; return pop(); }
     A.pop = null; A.ask = null;
     pop(); marks(); side();
   }
@@ -1422,7 +1429,9 @@
     if (hasDate && !due) P.err.date = v.date.trim() ? t.badDateFmt : t.badDate;
     else if (hasDate && dueLaw(c, due)) P.err.date = dueLaw(c, due);
     if (Object.keys(P.err).length) return pop();
-    try {
+    if (P.saving) return;
+    P.saving = true; popBusy();
+    try { await S.batch(async () => {
     if (P.moved) await S.moveAnchor(P.anchorId, P.page, P.box);
     const aid = P.anchorId || (await S.anchor(ws.doc.id, P.page, P.box)).id;
     if (target === 'note') {
@@ -1433,7 +1442,7 @@
       if (hasAmt) await S.editValues(instId, { amount_cents: amt });
       if (hasDate) await S.editValues(instId, { due_on: due });
     }
-    } catch (err) { P.err = { note: refusal(err) }; return pop(); }
+    }); } catch (err) { P.saving = false; P.err = { note: refusal(err) }; return pop(); }
     A.pop = null;
     pop(); marks(); side();
   }
