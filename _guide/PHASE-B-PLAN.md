@@ -120,6 +120,7 @@ stored at upload proves the file never changed; reads only through 5-minute sign
 | Step | What | Proof |
 |---|---|---|
 | **B0 · Eyes + pipe** | ① you re-authorise my Supabase connector to include the **Saker** org (today it sees only ICCMC) · ② you switch **Deploy to production ON** (branch `main`) · ③ I push a tiny first migration | dashboard «Last migration» shows it; I can list Saker's tables |
+| ↳ B0 state 2026-11-17 | ✔ eyes: custom connector «Supabase Saker» (`mcp.supabase.com/mcp?project_ref=ayrijizubulczzympslg`, reaches Saker ONLY) · ✔ defaults checked: auto-RLS trigger `ensure_rls` on; new tables give anon/authenticated no read/write (but TRUNCATE → revoked in B2) · first migration `20261117190500_b0_private_schema.sql` pushed (commit `24901d7`) | applied? see the decision log |
 | **B1 · Tables** | migration 1: tables, types, keys, checks, indexes | table list + every column type read back |
 | **B2 · The guard** | migration 2: roles, RLS, no DELETE, audit trigger, the 10 invariants + `run_health_audit()` (re-checks every money invariant over all rows; returns the breaks, empty = healthy) | **guard tests**: try to break each rule inside a rolled-back transaction → each must be refused; health audit = empty |
 | **B3 · The write door** | migration 3: the ~20 functions | each function called with good and bad input; audit rows appear |
