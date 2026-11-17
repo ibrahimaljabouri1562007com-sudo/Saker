@@ -262,15 +262,13 @@
     sceneKey = key;
     const p = Tn.pickPoster(W, H); if (!p) return;
     const L = Tn.layout(W, H), img = new Image();
-    img.decoding = 'async'; img.src = P.dir + p.f;                    // the sign-in's own poster (already in the cache)
+    img.decoding = 'async'; img.src = Tn.posterUrl(p);                // the sign-in's own poster (already in the cache)
     img.onload = () => {
       if (sceneKey !== key) return;
       const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
       cv.style.width = W + 'px'; cv.style.height = H + 'px';
-      let h = W / p.a, top = L.cy - p.h * h;                          // the sign-in's placement (terrain.js placePoster)
-      if (top > 0 || top + h < H) h = Math.max(L.cy / p.h, (H - L.cy) / (1 - p.h), h);
-      const w = h * p.a; top = L.cy - p.h * h;
+      const { w, h, top } = Tn.posterBox(p, L);                       // the sign-in's placement, the same rule
       const ctx = cv.getContext('2d'), soft = 'blur(5px) brightness(0.62) saturate(0.9)';
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.filter = soft;

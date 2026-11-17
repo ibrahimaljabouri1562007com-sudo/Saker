@@ -16,8 +16,12 @@ body.signing .bar, body.signing main, .boot-signin .bar, .boot-signin main { dis
 .boot-signin #signin[hidden] { display: block; }
 #signin:not(.placed) .si-stage, #signin:not(.placed) .si-dome { visibility: hidden; }   /* logo/fields wait for their place */
 .si-ground { position: absolute; inset: 0; z-index: -1; overflow: hidden; animation: none; }   /* overrides an old fade in app.css */
-.si-ground::before { content: ''; position: absolute; inset: -3%; pointer-events: none;      /* width-scaled, horizon on horizon */
+.si-ground::before { content: ''; position: absolute; inset: -3%; pointer-events: none; z-index: -2;   /* width-scaled, horizon on horizon */
   background: var(--si-lqip, none) 50% var(--si-lqip-y, 64%) / 100% auto no-repeat; filter: blur(20px); }
+/* the sharp poster, over the blur: its file + place come from index.html's <head> (first frames), re-placed by terrain.js */
+.si-ground::after { content: ''; position: absolute; pointer-events: none; z-index: -1;
+  left: var(--si-poster-x, 0); top: var(--si-poster-y, 0); width: var(--si-poster-w, 0); height: var(--si-poster-h, 0);
+  background: var(--si-poster, none) 0 0 / 100% 100% no-repeat; }
 .si-ground canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
 #si-terrain { opacity: 0; transition: opacity 500ms ease; }
 .si-ground.has-still #si-terrain { transition-duration: 200ms; }   /* over an identical picture: just swap quietly */

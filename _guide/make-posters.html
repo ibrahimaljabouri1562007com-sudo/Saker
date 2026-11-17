@@ -13,8 +13,12 @@
 <!-- Renders the sign-in landscape's FIRST FRAME at each screen shape, from the live scene itself, and saves:
      brand/posters/<name>.webp  — the poster shown on a first visit until the live land fades in over it;
      brand/posters/manifest.json — {look, dir, list:[{a, f, h, q}]}: aspect, file, horizon fraction, tiny placeholder.
-     Run it after ANY change to the look (and bump LOOK in terrain.js): python -I sink.py "<project>/brand/posters"
-     then open /Projects/Saker/_guide/make-posters.html and call run(). Paste manifest.json into index.html. -->
+     Run it after ANY change to the look (and bump LOOK in terrain.js): python -I tools/poster_sink.py
+     then open /Projects/Saker/_guide/make-posters.html and call run(); then python -I tools/inline_posters.py.
+     Density (2026-11-18): drawn sharper than the screen they stand for (wide ×1.6, phones ×3, tablets ×2), so a poster
+     is never stretched on a high-density screen — a 2048-wide window at 125 % needs 2560 px; the old ×1 posters were
+     1933 px wide and looked soft until the live land arrived. -->
+
 <div id="log">call run()</div>
 <script>
 // CSS size the scene is laid out at, and the pixel density it is drawn at (posters ≈ a real screen of that shape)
@@ -27,8 +31,8 @@ const WIDE = [0.85, 0.92, 1.0, 1.08, 1.16, 1.25, 1.33, 1.42, 1.5, 1.6, 1.7, 1.78
 const TALL = [0.45, 0.49, 0.53, 0.5625, 0.6, 0.65, 0.7, 0.75];
 const LQ = [1.0, 1.42, 1.86, 2.37, 0.49, 0.7];
 const SHAPES = [
-  ...WIDE.map(a => { const w = Math.round(Math.sqrt(2.1e6 * a)); return { n: 'w' + Math.round(a * 100), w, h: Math.round(w / a), dpr: 1, lq: LQ.includes(a) }; }),
-  ...TALL.map(a => { const w = a < 0.6 ? 390 : a < 0.7 ? 600 : 768; return { n: 'p' + Math.round(a * 1000), w, h: Math.round(w / a), dpr: a < 0.7 ? 2 : 1.6, lq: LQ.includes(a) }; }),
+  ...WIDE.map(a => { const w = Math.round(Math.sqrt(2.1e6 * a)); return { n: 'w' + Math.round(a * 100), w, h: Math.round(w / a), dpr: 1.6, lq: LQ.includes(a) }; }),
+  ...TALL.map(a => { const w = a < 0.6 ? 390 : a < 0.7 ? 600 : 768; return { n: 'p' + Math.round(a * 1000), w, h: Math.round(w / a), dpr: a < 0.6 ? 3 : 2, lq: LQ.includes(a) }; }),
 ];
 const SINK = 'http://127.0.0.1:5758/';
 const log = s => (document.getElementById('log').textContent += '\n' + s);

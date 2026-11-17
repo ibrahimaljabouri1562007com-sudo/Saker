@@ -112,6 +112,14 @@ Worked example (Firm A, viewing November; Sep and Oct paid in November):
     for that — but a lock is only as strong as every key holder. (Ibrahim, 2026-11-17)
   - ☐ Supabase «Leaked password protection» (refuses passwords from known leaks — HaveIBeenPwned) is off; likely a paid
     feature. Low urgency: the 6-digit code (B6, required by the database) already defeats a leaked password.
+  - ☐ **Limit Cloudflare's GitHub app to the Saker repo only** (Cloudflare Pages app, installed for earlier projects,
+    sees ALL repos today) — GitHub → Settings → Applications → Cloudflare Pages → Repository access. (B7, 2026-11-17)
+  - ☐ **Backups decided** — the Free plan keeps none: Pro (≈ 25 USD/month, daily, 7 days) or our own nightly export.
+  - ☐ **Demo data wiped** (the 20 demo contracts + the test firms «iii» / «sdss») before the first real contract.
+  - ☐ **The real Boss account**: his own inbox · added to «Saker people» (Cloudflare) + Supabase role boss · links his
+    phone at first sign-in. The test Boss (`boss.test@example.com`) still has no phone linked.
+  - Shelved by Ibrahim 2026-11-17 ("keep these points on the shelf, so if I return to them") — together = **B8**
+    (`PHASE-B-PLAN.md`); feature shelf items stay where they are (§4b, «تعديل», overpayment → credit, report notes).
   - The way in = 3 layers: ① Cloudflare Access (the page) → ② password → ③ 6-digit code; ② and ③ are also enforced
     on a direct call to Supabase (the page can be skipped, the database cannot), with the guard + vault behind them.
 

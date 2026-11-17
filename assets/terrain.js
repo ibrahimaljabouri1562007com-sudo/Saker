@@ -477,30 +477,39 @@
     for (const p of fam) if (p.a <= a * 1.002) best = p;
     return best;
   }
-  function placePoster(img, p, L) {
+  // Where a poster sits: scaled to the screen's width, its horizon on the land's horizon (rare gap: cover instead).
+  // ONE rule, used by the sign-in (here), the Boss view (app.js) and — copied, because it runs before any script
+  // loads — the <head> block written by tools/inline_posters.py (tests/poster-place.html proves the copy equal).
+  function posterBox(p, L) {
     let h = L.W / p.a, top = L.cy - p.h * h;
-    if (top > 0 || top + h < L.H) h = Math.max(L.cy / p.h, (L.H - L.cy) / (1 - p.h), h);   // rare gap: cover instead
+    if (top > 0 || top + h < L.H) h = Math.max(L.cy / p.h, (L.H - L.cy) / (1 - p.h), h);
     const w = h * p.a; top = L.cy - p.h * h;
-    Object.assign(img.style, { inset: 'auto', width: w + 'px', height: h + 'px', left: (L.W - w) / 2 + 'px', top: top + 'px', objectFit: 'fill' });
+    return { left: (L.W - w) / 2, top, w, h };
+  }
+  // the poster's address, keyed by the look (so the files may be cached for good: a new look = a new address)
+  const posterUrl = p => root.SAKER_POSTERS.dir + p.f + '?' + root.SAKER_POSTERS.look;
+  // The poster is a CSS layer (.si-ground::after), painted from the first frames by the <head> block — sharp at once,
+  // without waiting for the scripts. Here it is only re-placed (a resize, or a sign-out back to the sign-in).
+  function paintPoster(p, L) {
+    const d = document.documentElement.style, b = posterBox(p, L), px = v => v.toFixed(2) + 'px';
+    d.setProperty('--si-poster', `url("${new URL(posterUrl(p), location.href).href}")`);   // absolute: var() url()s resolve against the stylesheet
+    d.setProperty('--si-poster-x', px(b.left)); d.setProperty('--si-poster-y', px(b.top));
+    d.setProperty('--si-poster-w', px(b.w)); d.setProperty('--si-poster-h', px(b.h));
   }
   function underlay(cv, L) {
     const host = cv && cv.parentNode, ls = store(), W = L.W, H = L.H;
     let src = null;
     try { src = !QA && ls && ls.getItem(frameKey(W, H)); } catch (e) { src = null; }
-    const poster = src ? null : pickPoster(W, H);
-    const want = src || (poster && (root.SAKER_POSTERS.dir + poster.f));
-    if (host) host.querySelectorAll('img.si-still').forEach(i => { if (i.getAttribute('src') !== want) i.remove(); });
+    const poster = pickPoster(W, H);
+    if (poster) paintPoster(poster, L);                      // always under everything (also under a remembered frame)
+    if (host) host.querySelectorAll('img.si-still').forEach(i => { if (i.getAttribute('src') !== src) i.remove(); });
     let img = host && host.querySelector('img.si-still');
-    if (host && want && !img) {
+    if (host && src && !img) {                               // this device's own last frame: identical to the live land
       img = document.createElement('img');
-      img.className = 'si-still'; img.alt = ''; img.decoding = src ? 'sync' : 'async';
-      if (poster) { img.fetchPriority = 'high'; img.style.opacity = '0'; img.onload = () => { img.style.opacity = '1'; performance.mark && performance.mark('saker:poster'); }; }
-      img.src = want;
+      img.className = 'si-still'; img.alt = ''; img.decoding = 'sync'; img.src = src;
       host.insertBefore(img, host.firstChild);
-      if (poster && img.complete) img.style.opacity = '1';
       performance.mark && performance.mark('saker:still');
     }
-    if (img && poster) placePoster(img, poster, L);
     if (host) { host.classList.toggle('has-still', !!src); host.classList.toggle('has-poster', !!poster); }
   }
   // keep the frame just drawn (call right after drawing, same task: the buffer is still readable)
@@ -537,7 +546,7 @@
     // reused by the Boss view (Look v2, 2026-11-17): the SAME poster at the SAME place as the sign-in, so the app
     // continues the landscape. Pure functions — reading them changes nothing in how the land looks.
     layout: (W, H) => compose(W, H),
-    pickPoster,
+    pickPoster, posterBox, posterUrl,
     // Lay out for the current size and start drawing; returns the layout for logo/dome/fields.
     start(ground, live) {
       this.stop();
@@ -551,7 +560,7 @@
         if (!S.gl) init(ground);
         ground.classList.remove('ready');
         const qd = QA && +(/[?&]dpr=([\d.]+)/.exec(location.search) || [])[1];   // poster rendering only
-        const dpr = Math.min(qd || root.devicePixelRatio || 1, 2);
+        const dpr = Math.min(qd || root.devicePixelRatio || 1, qd ? 3 : 2);   // posters for 3× phones are drawn at 3×
         const k = Math.min(dpr, Math.sqrt(SETTINGS.maxPixels / (W * H)));
         S.w = Math.round(W * k); S.h = Math.round(H * k);
         ground.width = S.w; ground.height = S.h;

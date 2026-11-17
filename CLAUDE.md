@@ -31,8 +31,11 @@ No altitude = it's an Admin feature.
 - **Cache pins:** every asset link in `index.html` carries `?v=N`; bump N (all links) on every change,
   or browsers keep running the old file.
 - **Sign-in posters follow the look:** any change to how the landscape looks → bump `LOOK` in
-  `assets/terrain.js`, re-render the posters (`_guide/make-posters.html` + the receiver, see its header),
+  `assets/terrain.js`, re-render the posters (`_guide/make-posters.html` + `tools/poster_sink.py`, see its header),
   then `python -I tools/inline_posters.py`. Stale posters are skipped automatically (dark first paint).
+  The sharp poster is painted by index.html's `<head>` (never waits for the scripts); its placement is a copy of
+  terrain.js `posterBox` — after touching either, `tests/poster-place.html` must say «0 differ». Posters and `assets/`
+  are cached for a year by `_headers` (safe only because every address carries `?v=N` / `?<look>`).
 - **Logo lettering is generated:** «صقر / SAKER» come from `tools/make_wordmark.py` (Noto Kufi Arabic + Noto
   Sans outlines). Never hand-edit or re-trace those paths; change the script and re-run it.
 - **Own stove:** صقر's database and storage share nothing with ICCMC, Orphans or any other project.
