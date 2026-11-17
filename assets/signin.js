@@ -11,6 +11,8 @@
 
   function draw() {
     const S = st.T.si, f = $('#si-form');
+    f.classList.remove('busy');      // a fresh screen always starts clean: a check that SUCCEEDED never removed it, so after
+                                     // signing out the form came back dimmed and refusing clicks (Ibrahim, 2026-11-18)
     if (st.step === 'creds') {
       f.innerHTML = `
         <input class="si-input" type="email" name="email" dir="ltr" autocomplete="username" inputmode="email"
@@ -127,7 +129,8 @@
   root.SakerSignin = {
     // T = the language pack; done(email) runs after the second step
     show(T, done) {
-      st.T = T; st.done = done; st.leaving = false;
+      st.T = T; st.done = done; st.leaving = false; st.mfa = null;
+      if (st.step !== 'creds') st.step = 'creds';          // signing out always returns to email + password
       if (!wired) { wire(); wired = true; }
       $('#signin').hidden = false;
       document.body.classList.add('signing');
