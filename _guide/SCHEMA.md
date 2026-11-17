@@ -10,8 +10,9 @@ older `DATA-SHAPE.md` draft; differences are listed at the end.
    so they can never go stale or disagree.
 3. **Names say the type** (the app already follows it): `_id` = a link to another table · `_cents` = money in whole
    cents · `_on` = a calendar day · `_at` = a moment in time. Column names = the app's keys → no translation layer.
-4. **Every table starts the same way:** `id` (uuid) · `created_at` · `created_by` (the signed-in user). Rows that can be
-   "removed" have `voided_at` — removed means voided, never deleted.
+4. **Every table starts the same way:** `id` (uuid) · `created_at` · `created_by` (required; defaults to the signed-in
+   user — a write with no signed-in user is refused; a trusted script such as the demo loader states it explicitly).
+   Rows that can be "removed" have `voided_at` — removed means voided, never deleted. **Built in B1 ✔ 2026-11-17.**
 5. **Every link is a foreign key with `on delete restrict`** — no orphan can exist, and nothing can be pulled out from
    under its rows.
 6. **The database checks shapes** (types + `check`), the guard (B2) checks rules that span tables, the functions (B3)
