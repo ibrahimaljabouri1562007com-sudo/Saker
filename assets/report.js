@@ -42,11 +42,19 @@
     document.body.classList.add('rp-on');
     document.addEventListener('keydown', onKey);
     el.querySelector('.rp-close').addEventListener('click', close);
-    el.querySelector('.rp-save').addEventListener('click', () => {
-      savedTitle = document.title;
-      document.title = title;                                  // the saved file's name: the report's own heading
-      window.addEventListener('afterprint', () => { document.title = savedTitle; }, { once: true });
-      window.print();
+    current = title;
+    el.querySelector('.rp-save').addEventListener('click', async e => {
+      const b = e.currentTarget, label = b.textContent;
+      if (b.disabled) return;
+      b.disabled = true; b.textContent = R.saving;
+      try {
+        const pdf = await makePdf(title);
+        pdf.save(title.replace(/[\\/:*?"<>|]+/g, '-') + '.pdf');   // the file's name: the report's own heading
+      } catch (err) {                                          // the libraries could not load (offline…): the print dialog
+        savedTitle = document.title; document.title = title;
+        window.addEventListener('afterprint', () => { document.title = savedTitle; }, { once: true });
+        window.print();
+      } finally { b.disabled = false; b.textContent = label; }
     });
 
     try { await document.fonts.ready; } catch (e) { /* fonts are a nicety */ }
@@ -57,6 +65,47 @@
     el.querySelector('.rp-wait').remove();
     el.querySelector('.rp-save').disabled = false;
     fit(); window.addEventListener('resize', fit);
+  }
+
+  // «حفظ PDF» DOWNLOADS the file (Ibrahim, 2026-11-18: "make it download", not print). Each A4 sheet is drawn by the
+  // browser into a picture (html2canvas — the Arabic shaped exactly as on screen) and the pictures become the pages of
+  // one PDF (jsPDF), A4 edge to edge. Both libraries load only when the button is pressed (pinned versions).
+  const LIBS = ['https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js',
+                'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js'];
+  const loadLib = src => new Promise((ok, no) => {
+    if (document.querySelector(`script[src="${src}"]`) && (src.includes('html2canvas') ? root.html2canvas : root.jspdf)) return ok();
+    const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => no(new Error('could not load ' + src));
+    document.head.appendChild(s);
+  });
+  let current = '';
+  async function makePdf(title) {
+    await Promise.all(LIBS.map(loadLib));
+    const box = el.querySelector('.rp-sheets'), zoom = box.style.zoom, stage = el.querySelector('.rp-stage'), top = stage.scrollTop;
+    box.style.zoom = 1;                                        // drawn at full size, whatever the screen shows
+    // a canvas rounds each letter's width at small sizes (Chrome: "Northwind" 63 px vs 60.8 px on the page), so long
+    // words grew into the next one ("NorthwindTrading"). While the sheets are drawn, every word is written at 4× its
+    // size and shrunk back: its width then matches the page to a fraction of a pixel. Restored right after.
+    const P = root.CanvasRenderingContext2D.prototype, fill = P.fillText, K = 4;
+    P.fillText = function (text, x, y, maxW) {
+      const f = this.font, m = /(\d*\.?\d+)px/.exec(f);
+      if (!m) return fill.call(this, text, x, y, maxW);
+      this.save(); this.translate(x, y); this.scale(1 / K, 1 / K);
+      this.font = f.replace(m[0], parseFloat(m[1]) * K + 'px');
+      fill.call(this, text, 0, 0, maxW === undefined ? undefined : maxW * K);
+      this.restore();
+    };
+    try {
+      const pdf = new root.jspdf.jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait', compress: true });
+      const sheets = [...el.querySelectorAll('.rp-sheet')], paper = css('--paper') || '#ffffff';
+      for (let i = 0; i < sheets.length; i++) {
+        const c = await root.html2canvas(sheets[i], { scale: 2, backgroundColor: paper, useCORS: true, logging: false,
+          scrollX: 0, scrollY: 0, windowWidth: document.documentElement.clientWidth });
+        if (i) pdf.addPage('a4', 'portrait');
+        pdf.addImage(c.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, 210, 297, undefined, 'FAST');
+      }
+      pdf.setProperties({ title, creator: 'صقر' });
+      return pdf;
+    } finally { P.fillText = fill; box.style.zoom = zoom; stage.scrollTop = top; }
   }
 
   // screens narrower than a sheet see the sheets scaled down (the print is never scaled)
@@ -307,5 +356,7 @@
     sheets.forEach((s, n) => { s.querySelector('.rp-pg').textContent = R.page(n + 1, sheets.length); });
   }
 
-  root.SakerReport = { open: ctx => { markNo = 0; rasters.clear(); return open(ctx); }, close };
+  root.SakerReport = { open: ctx => { markNo = 0; rasters.clear(); return open(ctx); }, close,
+    // QA: the PDF the button would download, as bytes (no download)
+    pdfBytes: async () => el && (await makePdf(current)).output('arraybuffer') };
 })(window);

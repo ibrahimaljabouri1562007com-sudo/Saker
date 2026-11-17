@@ -119,7 +119,7 @@
         asOfShort: (d, h) => `كما هي مسجّلة في ${d} · ${h}`, page: (n, N) => `صفحة ${n} من ${N}`,
         summary: 'ملخص الشركات', details: 'تفاصيل الشركات', cont: 'تابع', refs: 'المراجع من العقود',
         notes: 'ملاحظات', clip: (ref, n) => `${ref} · صفحة ${n}`, total: 'الإجمالي',
-        save: 'حفظ PDF', close: 'إغلاق', building: 'جارٍ إعداد التقرير…', firmTotal: 'المستحق' },
+        save: 'حفظ PDF', close: 'إغلاق', building: 'جارٍ إعداد التقرير…', saving: 'جارٍ تجهيز الملف…', firmTotal: 'المستحق' },
       months: ['كانون الثاني', 'شباط', 'آذار', 'نيسان', 'أيار', 'حزيران', 'تموز', 'آب', 'أيلول', 'تشرين الأول', 'تشرين الثاني', 'كانون الأول'],
     },
     en: {
@@ -238,7 +238,7 @@
         asOfShort: (d, h) => `As recorded on ${d} · ${h}`, page: (n, N) => `Page ${n} of ${N}`,
         summary: 'Firms summary', details: 'Firm details', cont: 'continued', refs: 'References from the contracts',
         notes: 'Notes', clip: (ref, n) => `${ref} · page ${n}`, total: 'Total',
-        save: 'Save PDF', close: 'Close', building: 'Preparing the report…', firmTotal: 'Due' },
+        save: 'Save PDF', close: 'Close', building: 'Preparing the report…', saving: 'Preparing the file…', firmTotal: 'Due' },
       months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
     },
   };
