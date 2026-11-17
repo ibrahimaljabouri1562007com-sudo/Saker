@@ -98,6 +98,10 @@ Worked example (Firm A, viewing November; Sep and Oct paid in November):
   served only through short-lived signed links, issued after the guard says yes.
 - **Its own Supabase project** (second-stove rule): shares nothing with ICCMC or Orphans.
   No public sign-up · two-step sign-in for everyone · audit log · point-in-time backups.
+- **Security shelf** (points to close before real data; Ibrahim, 2026-11-17: "first the skeleton, then the layers"):
+  - ☐ **Make the GitHub repo private** (`ibrahimaljabouri1562007com-sudo/Saker`, public since 2026-11-17 — code + demo
+    data only; the plan documents, incl. this lock design, are readable while it is public).
+  - ☐ The three locks above (gate · guard · vault) verified live — the precondition for any real firm or contract.
 
 ---
 
@@ -124,6 +128,9 @@ viewer). **Fake firms and dummy PDFs only** until all three locks are on.
 
 ### Phase B — wire the fridge, turn on the locks
 
+> **Detailed plan: `PHASE-B-PLAN.md`** (proposed 2026-11-17; its steps B0–B8 refine the table below once Ibrahim
+> approves). Project: Supabase **Saker** `ayrijizubulczzympslg`, Frankfurt, linked to the GitHub repo.
+
 | # | Step | Tag | What "done" means | Status |
 |---|---|---|---|---|
 | B1 | **New Supabase project** + schema from DATA-SHAPE | 🟢 Stand up a Supabase backend | Own project, region chosen (see data-residency question) · constraints: Σ installments = total, allocations ≤ installment, money non-negative | ☐ |
@@ -144,8 +151,8 @@ viewer). **Fake firms and dummy PDFs only** until all three locks are on.
 - **Live sync** (Supabase Realtime) if several Admins work at once.
 
 ## 4. Open items (none blocks Phase A)
-- ☐ **Data residency:** must the financial data stay in a specific country or on the entity's own
-  premises? *Blocks B1 only.* If no such rule → the ICCMC setup above.
+- ✔ **Data residency** (Ibrahim, 2026-11-17): no rule keeps the data in Iraq or on the entity's premises → Supabase
+  cloud, region **Central EU (Frankfurt)** (the closest to Baghdad; permanent once the project is created).
 - ☐ **"Paid X of Y" wording** on a partially paid row (to discuss).
 - ◐ **Hover order** (recommended, not yet confirmed): largest Remaining first, ties by oldest
   overdue, fully paid at the bottom, firms with nothing due this month hidden.
