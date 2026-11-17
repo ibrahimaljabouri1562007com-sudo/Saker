@@ -102,6 +102,11 @@ Worked example (Firm A, viewing November; Sep and Oct paid in November):
   - ☐ **Make the GitHub repo private** (`ibrahimaljabouri1562007com-sudo/Saker`, public since 2026-11-17 — code + demo
     data only; the plan documents, incl. this lock design, are readable while it is public).
   - ☐ The three locks above (gate · guard · vault) verified live — the precondition for any real firm or contract.
+  - ◐ **Every account's email is an inbox its owner controls — or a reserved test address** (`…@example.com`). Why:
+    Cloudflare guards the PAGE only; Supabase's own sign-in services (incl. "reset password") answer anyone who has the
+    public address + key, so whoever owns an account's inbox can take the account. 2026-11-17: the test Boss account was
+    moved from a made-up Gmail address to `boss.test@example.com` (same account, same password, role boss) ✔ · the real
+    Boss later = his own inbox · the strongest lock = the 6-digit code required BY THE DATABASE (B6).
 
 ---
 
