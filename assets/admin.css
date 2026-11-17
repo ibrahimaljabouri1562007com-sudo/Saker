@@ -443,6 +443,9 @@ button.srch-row:hover { background: var(--surface-2); }
 .pay-drop { flex: 1; margin: 16px; border-radius: 14px; }
 .ws-mark.is-pay { border-color: var(--st-paid); background: rgba(138, 214, 172, 0.16); }
 .ws-mark.is-pay .ws-tag { background: var(--st-paid); color: var(--bg); }
+button.ws-mark.is-pay:hover { background: rgba(138, 214, 172, 0.28); }
+.box-pop { padding: 8px; min-width: 0; }
+.box-pop .adm-actions { margin: 0; flex-wrap: nowrap; }
 /* the drawer: confirmation + the contract's payments */
 .pay-flash { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: var(--st-paid); }
 .pay-flash svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; }

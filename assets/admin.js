@@ -477,6 +477,27 @@
       ${P.manual ? `<button type="button" class="adm-link" data-a="pay-auto">${esc(t.autoSplit)}</button>` : ''}`;
   }
 
+  // a box drawn on a receipt / an instruction is a BUTTON, like the workspace's (Ibrahim, 2026-11-17): click it → a small
+  // panel with «إعادة رسم المربع» (clear it, drag a new one) and «إزالة» (clear it). Clicking it never starts a new drag.
+  function boxMark(page, box, tag, act) {
+    const [x, y, w, h] = box, W = page.vp.width, H = page.vp.height, m = document.createElement('button');
+    m.type = 'button'; m.className = 'ws-mark is-pay'; m.setAttribute('aria-label', tag);
+    Object.assign(m.style, { left: x * W + 'px', top: y * H + 'px', width: w * W + 'px', height: h * H + 'px' });
+    m.innerHTML = `<span class="ws-tag words" dir="auto">${esc(tag)}</span>`;
+    m.addEventListener('click', e => {
+      e.stopPropagation();
+      const open = page.box.querySelector('.box-pop'); if (open) { open.remove(); return; }
+      const t = T(), pop = document.createElement('div');
+      pop.className = 'ws-pop box-pop'; pop.dir = X.T.dir;
+      Object.assign(pop.style, { left: x * W + 'px', top: (y + h) * H + 8 + 'px' });
+      pop.innerHTML = `<div class="adm-actions"><button type="button" class="adm-btn small" data-k="redraw">${ico.box}<span>${esc(t.redraw)}</span></button>
+        <button type="button" class="adm-btn small danger" data-k="remove">${esc(t.remove)}</button></div>`;
+      pop.addEventListener('pointerdown', ev => ev.stopPropagation());
+      pop.addEventListener('click', ev => { const b = ev.target.closest('button'); if (!b) return; ev.stopPropagation(); pop.remove(); act(b.dataset.k); });
+      page.box.appendChild(pop);
+    });
+    page.box.appendChild(m);
+  }
   // the receipt: the same viewer; one box around the amount line (drag again to redraw it)
   function paintReceipt() {
     const P = A.payF, sc = main.querySelector('.pay-scroll'), my = { memo: null, sc };
@@ -485,6 +506,8 @@
     let d = null;
     sc.addEventListener('pointerdown', e => {
       if (e.button !== 0 || payView !== my || !my.memo) return;
+      if (e.target.closest('.ws-mark, .box-pop')) return;          // the box is a button: no drag from it
+      my.memo.wrap.querySelectorAll('.box-pop').forEach(x => x.remove());
       const pageEl = e.target.closest('.page'); if (!pageEl) return;
       const r = pageEl.getBoundingClientRect();
       d = { pageEl, r, x0: e.clientX - r.left, y0: e.clientY - r.top, el: document.createElement('div'), id: e.pointerId };
@@ -511,14 +534,10 @@
   }
   function payMark() {
     const my = payView, P = A.payF; if (!my || !my.memo) return;
-    my.memo.wrap.querySelectorAll('.ws-mark').forEach(e => e.remove());
+    my.memo.wrap.querySelectorAll('.ws-mark, .box-pop').forEach(e => e.remove());
     if (!P.box) return;
     const p = my.memo.pages[P.box.page - 1]; if (!p) return;
-    const [x, y, w, h] = P.box.box, W = p.vp.width, H = p.vp.height, m = document.createElement('div');
-    m.className = 'ws-mark is-pay';
-    Object.assign(m.style, { left: x * W + 'px', top: y * H + 'px', width: w * W + 'px', height: h * H + 'px' });
-    m.innerHTML = `<span class="ws-tag words" dir="auto">${esc(T().pay.boxTag)}</span>`;
-    p.box.appendChild(m);
+    boxMark(p, P.box.box, T().pay.boxTag, () => { P.box = null; payMark(); payReady(); });   // redraw or remove: the box is cleared
   }
   function payReady() {                                     // the box decides whether «حفظ الدفعة» can be pressed
     const t = T().pay, P = A.payF;
@@ -792,19 +811,17 @@
     crView = my;
     const mark = () => {
       if (!my.memo) return;
-      my.memo.wrap.querySelectorAll('.ws-mark').forEach(e => e.remove());
+      my.memo.wrap.querySelectorAll('.ws-mark, .box-pop').forEach(e => e.remove());
       if (!slot.box) return;
       const p = my.memo.pages[slot.box.page - 1]; if (!p) return;
-      const [x, y, w, h] = slot.box.box, W = p.vp.width, H = p.vp.height, m = document.createElement('div');
-      m.className = 'ws-mark is-pay';
-      Object.assign(m.style, { left: x * W + 'px', top: y * H + 'px', width: w * W + 'px', height: h * H + 'px' });
-      m.innerHTML = `<span class="ws-tag words" dir="auto">${esc(tag)}</span>`;
-      p.box.appendChild(m);
+      boxMark(p, slot.box.box, tag, () => { slot.box = null; mark(); crReady(); });
     };
     V.paint({ path: slot.path, anchor: null, onLaidOut: memo => { if (crView !== my) return; my.memo = memo; mark(); } }, sc, () => crView === my, X.T.loading);
     let d = null;
     sc.addEventListener('pointerdown', e => {
       if (e.button !== 0 || crView !== my || !my.memo) return;
+      if (e.target.closest('.ws-mark, .box-pop')) return;          // the box is a button: no drag from it
+      my.memo.wrap.querySelectorAll('.box-pop').forEach(x => x.remove());
       const pageEl = e.target.closest('.page'); if (!pageEl) return;
       const r = pageEl.getBoundingClientRect();
       d = { pageEl, r, x0: e.clientX - r.left, y0: e.clientY - r.top, el: document.createElement('div'), id: e.pointerId };
@@ -833,7 +850,7 @@
     const t = T().cr, tp = T().pay, F = A.crF, s = F.docs[F.tab], ready = F.docs.receipt.box && F.docs.instr.box;
     const btn = main.querySelector('#cr-form button[type=submit]'); if (btn) btn.disabled = F.busy || !ready;
     const need = main.querySelector('#cr-form .pay-need'); if (need) { need.textContent = ready ? '' : t.needBoth; need.classList.remove('bad'); }
-    const tb = main.querySelector(`.ws-tab[data-k="${F.tab}"]`); if (tb && s.box) tb.innerHTML = `${ico.check}<span>${esc(F.tab === 'receipt' ? t.receipt : t.instruction)}</span>`;
+    const tb = main.querySelector(`.ws-tab[data-k="${F.tab}"]`); if (tb) tb.innerHTML = `${s.box ? ico.check : ico.file}<span>${esc(F.tab === 'receipt' ? t.receipt : t.instruction)}</span>`;
     const meta = main.querySelector('.cr-meta'); if (meta && s.file) meta.innerHTML = `<span dir="ltr">${esc(s.file.name)}</span> · ${esc(s.box ? tp.boxDone : (F.tab === 'receipt' ? t.drawReceipt : t.drawInstr))}`;
   }
   async function takeCrFile(file) {
