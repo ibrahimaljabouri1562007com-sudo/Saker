@@ -110,6 +110,8 @@ Worked example (Firm A, viewing November; Sep and Oct paid in November):
   - ☐ **Disconnect Claude's «Supabase Saker» connector (or replace it with a read-only one)** before real data: it has
     full database access, so it could technically read the sign-in tables (incl. each phone's TOTP secret). Never used
     for that — but a lock is only as strong as every key holder. (Ibrahim, 2026-11-17)
+  - ☐ Supabase «Leaked password protection» (refuses passwords from known leaks — HaveIBeenPwned) is off; likely a paid
+    feature. Low urgency: the 6-digit code (B6, required by the database) already defeats a leaked password.
   - The way in = 3 layers: ① Cloudflare Access (the page) → ② password → ③ 6-digit code; ② and ③ are also enforced
     on a direct call to Supabase (the page can be skipped, the database cannot), with the guard + vault behind them.
 

@@ -11,6 +11,11 @@ begin
   insert into storage.objects (bucket_id, name) values ('documents', 'docs/' || p_id || '.pdf') on conflict do nothing;
   return jsonb_strip_nulls(jsonb_build_object('id', p_id, 'file_name', p_name, 'pages', p_pages, 'sha256', repeat('a', 64), 'page', p_page, 'box', p_box));
 end $f$;
+-- since B5 the database holds data (the demo + test contracts) until B8: the test counts ONLY its own rows and checks
+-- 'nothing left behind' against a snapshot of the totals taken before it runs
+drop table if exists qa_base;
+create temp table qa_base as select (select count(*) from public.firms) as firms, (select count(*) from public.audit_log) as log,
+  (select count(*) from storage.objects where bucket_id = 'documents') as files, (select value from private.counters where name = 'voucher') as counter;
 create temp table if not exists b3_results (n int, test text, expected text, got text, pass boolean);
 truncate b3_results;
 do $do$
@@ -22,7 +27,8 @@ declare
 begin
   begin
     insert into auth.users (id, email) values (ua, 'qa-admin@demo.saker'), (ub, 'qa-boss@demo.saker'), (us, 'qa-stranger@demo.saker');
-    insert into public.app_users (user_id, email, role) values (ua, 'qa-admin@demo.saker', 'admin'), (ub, 'qa-boss@demo.saker', 'boss');
+    -- since b5_people every new account gets its app_users row by itself (role none): the test sets the roles
+    update public.app_users set role = 'admin' where user_id = ua; update public.app_users set role = 'boss' where user_id = ub;
     cases := array[
       -- build a draft (Admin)
       array['create a contract (new firm, file registered)', 'accepted', 'select (public.create_contract(''Contoso'', ''CTR-1'', ''2026-08-01'', ' || fc || '))->>''contract_id''', 'admin', 'c1'],
@@ -67,16 +73,16 @@ begin
       array['a draft at a second firm', 'accepted', 'select (public.create_contract(''Fabrikam'', ''FAB-1'', ''2026-09-01'', ' || fc || '))->>''contract_id''', 'admin', 'c2'],
       array['draft installment', 'accepted', 'select public.add_installment(''{c2}'', ''2026-12-01'', 500000, null, null, null)::text', 'admin', 'i3'],
       array['remove it (voided, kept)', 'accepted', 'select ''ok'' from public.remove_installment(''{i3}'')', 'admin', ''],
-      array['firms: Contoso reused, Fabrikam new = 2', '=2', 'select count(*)::text from public.firms', '', ''],
+      array['firms: Contoso reused, Fabrikam new = 2', '=2', 'select count(*)::text from public.firms where name in (''Contoso'', ''Fabrikam'')', '', ''],
       -- who may call what, and what each one reads
       array['Boss records a payment', '42501', 'select public.record_payment(''{c1}'', ''2026-09-12'', 100, ''TRX-B'', ' || fr || ', jsonb_build_array(jsonb_build_object(''installment_id'', ''{i2}'', ''cents'', 100)))::text', 'boss', ''],
       array['Boss runs the health audit', '42501', 'select count(*)::text from public.health_audit()', 'boss', ''],
-      array['Boss''s snapshot: 1 contract (the draft hidden) · role · numbers 1,2', '=1/boss/1,2', 'select jsonb_array_length(s->''contracts'') || ''/'' || (s->''me''->>''role'') || ''/'' || (select string_agg(x->>''seq'', '','' order by x->>''due_on'') from jsonb_array_elements(s->''installments'') x where x->>''voided_at'' is null) from (select public.app_snapshot() s) q', 'boss', ''],
-      array['Admin''s snapshot: 2 contracts · vouchers 1,2,3', '=2/1,2,3', 'select jsonb_array_length(s->''contracts'') || ''/'' || (select string_agg(x->>''no'', '','' order by (x->>''no'')::int) from jsonb_array_elements(s->''vouchers'') x) from (select public.app_snapshot() s) q', 'admin', ''],
+      array['Boss''s snapshot: 1 contract (the draft hidden) · role · numbers 1,2', '=1/boss/1,2', 'select (select count(*) from jsonb_array_elements(s->''contracts'') x where x->>''id'' in (''{c1}'', ''{c2}'')) || ''/'' || (s->''me''->>''role'') || ''/'' || (select string_agg(x->>''seq'', '','' order by x->>''due_on'') from jsonb_array_elements(s->''installments'') x where x->>''voided_at'' is null and x->>''contract_id'' = ''{c1}'') from (select public.app_snapshot() s) q', 'boss', ''],
+      array['Admin''s snapshot: 2 contracts · vouchers 1,2,3', '=2/1,2,3', 'select (select count(*) from jsonb_array_elements(s->''contracts'') x where x->>''id'' in (''{c1}'', ''{c2}'')) || ''/'' || (select string_agg(x->>''no'', '','' order by (x->>''no'')::int) from jsonb_array_elements(s->''vouchers'') x where x->>''contract_id'' = ''{c1}'') from (select public.app_snapshot() s) q', 'admin', ''],
       array['a signed-in stranger: no role, nothing', '=none/0', 'select coalesce(s->''me''->>''role'', ''none'') || ''/'' || jsonb_array_length(s->''contracts'') from (select public.app_snapshot() s) q', 'stranger', ''],
       array['a stranger creates a contract', '42501', 'select (public.create_contract(''X'', ''X-1'', null, ' || fc || '))::text', 'stranger', ''],
       array['an anonymous visitor reads the snapshot', '42501', 'select public.app_snapshot()::text', 'anon', ''],
-      array['every write is in the history, signed by the Admin', '=true', 'select (count(*) > 0 and count(*) filter (where user_id is distinct from ''' || ua || ''') = 0)::text from public.audit_log where table_name <> ''app_users''', '', ''],
+      array['every write is in the history, signed by the Admin', '=true', 'select (count(*) > 0 and count(*) filter (where user_id is distinct from ''' || ua || ''') = 0)::text from public.audit_log where table_name <> ''app_users'' and at = now()', '', ''],   -- this test's own lines (one transaction = one now())
       array['health audit (Admin): no breaks', '=0', 'select count(*)::text from public.health_audit()', 'admin', '']
     ];
     for k in 1 .. array_length(cases, 1) loop
@@ -106,7 +112,10 @@ begin
   insert into b3_results select row_number() over (), split_part(x, '|', 1), split_part(x, '|', 2), split_part(x, '|', 3), split_part(x, '|', 4)::boolean from unnest(res) x;
 end $do$;
 select n, pass, expected, got, test from b3_results
-union all select 99, (select count(*) from public.firms) + (select count(*) from public.audit_log) + (select count(*) from auth.users where email like 'qa-%@demo.saker') = 0
-  and (select value from private.counters where name = 'voucher') = 0 and (select count(*) from storage.objects where bucket_id = 'documents') = 0,
-  'all undone', (select count(*) from public.firms) || ' firms / ' || (select count(*) from public.audit_log) || ' log / counter ' || (select value from private.counters where name = 'voucher'), 'nothing left behind'
+union all select 99, (select count(*) from public.firms) = (select firms from qa_base) and (select count(*) from public.audit_log) = (select log from qa_base)
+  and (select count(*) from storage.objects where bucket_id = 'documents') = (select files from qa_base)
+  and (select value from private.counters where name = 'voucher') = (select counter from qa_base)
+  and (select count(*) from auth.users where email like 'qa-%@demo.saker') = 0,
+  'all undone', (select count(*) from public.firms) - (select firms from qa_base) || ' firms / ' || (select count(*) from public.audit_log) - (select log from qa_base)
+  || ' log / ' || (select count(*) from storage.objects where bucket_id = 'documents') - (select files from qa_base) || ' files added', 'nothing left behind'
 order by n;

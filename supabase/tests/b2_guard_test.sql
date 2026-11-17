@@ -5,6 +5,11 @@
 -- Codes: 42501 no right · SK001 nothing deleted · SK002 cannot change · SK003 wrong firm/kind/place ·
 --        SK004 money does not add up · SK005 date rule · SK006 cannot go back · #n = rows seen · accepted = allowed.
 -- First run 2026-11-17: 52/52 pass, 0 rows left. (Allowed cases build on each other: keep their order.)
+-- since B5 the database holds data (the demo + test contracts) until B8: the test counts ONLY its own rows and checks
+-- 'nothing left behind' against a snapshot of the totals taken before it runs
+drop table if exists qa_base;
+create temp table qa_base as select (select count(*) from public.firms) as firms, (select count(*) from public.audit_log) as log,
+  (select count(*) from storage.objects where bucket_id = 'documents') as files, (select value from private.counters where name = 'voucher') as counter;
 create temp table if not exists b2_results (n int, test text, expected text, got text, pass boolean);
 truncate b2_results;
 do $do$
@@ -19,7 +24,8 @@ begin
   begin
     -- ── fixtures ──
     insert into auth.users (id, email) values (ua, 'qa-admin@demo.saker'), (ub, 'qa-boss@demo.saker'), (us, 'qa-stranger@demo.saker');
-    insert into public.app_users (user_id, email, role) values (ua, 'qa-admin@demo.saker', 'admin'), (ub, 'qa-boss@demo.saker', 'boss');
+    -- since b5_people every new account gets its app_users row by itself (role none): the test sets the roles
+    update public.app_users set role = 'admin' where user_id = ua; update public.app_users set role = 'boss' where user_id = ub;
     insert into public.firms (name, created_by) values ('Contoso', ua) returning id into f;
     insert into public.firms (name, created_by) values ('Fabrikam', ua) returning id into g;
     insert into public.documents (firm_id, kind, file_path, file_name, pages, sha256, created_by) values (f, 'contract', 't/f-c.pdf', 'c.pdf', 2, repeat('a', 64), ua) returning id into df;
@@ -55,13 +61,13 @@ begin
 
     cases := array[
       -- who sees what (made AS each person)
-      array['Boss sees contracts: the active one only (draft hidden)', '#1', 'select count(*) from public.contracts', 'boss'],
-      array['Boss sees firms: only the one with an active contract', '#1', 'select count(*) from public.firms', 'boss'],
-      array['Boss sees installments of active contracts only', '#2', 'select count(*) from public.installments', 'boss'],
-      array['Boss sees the active firm''s 5 files, not the draft''s', '#5', 'select count(*) from public.documents', 'boss'],
+      array['Boss sees contracts: the active one only (draft hidden)', '#1', format('select count(*) from public.contracts where firm_id in (%L, %L)', f, g), 'boss'],
+      array['Boss sees firms: only the one with an active contract', '#1', format('select count(*) from public.firms where id in (%L, %L)', f, g), 'boss'],
+      array['Boss sees installments of active contracts only', '#2', format('select count(*) from public.installments where contract_id in (%L, %L)', c1, d), 'boss'],
+      array['Boss sees the active firm''s 5 files, not the draft''s', '#5', format('select count(*) from public.documents where firm_id in (%L, %L)', f, g), 'boss'],
       array['Boss sees no history', '#0', 'select count(*) from public.audit_log', 'boss'],
       array['Boss sees only himself among users', '#1', 'select count(*) from public.app_users', 'boss'],
-      array['Admin sees both contracts', '#2', 'select count(*) from public.contracts', 'admin'],
+      array['Admin sees both contracts', '#2', format('select count(*) from public.contracts where firm_id in (%L, %L)', f, g), 'admin'],
       array['Admin sees the history', '#>0', 'select count(*) from public.audit_log', 'admin'],
       array['a signed-in stranger (no صقر role) sees nothing', '#0', 'select count(*) from public.contracts', 'stranger'],
       array['anonymous visitor cannot read at all', '42501', 'select count(*) from public.contracts', 'anon'],
@@ -143,6 +149,10 @@ begin
   insert into b2_results select row_number() over (), split_part(x, '|', 1), split_part(x, '|', 2), split_part(x, '|', 3), split_part(x, '|', 4)::boolean from unnest(res) x;
 end $do$;
 select n, pass, expected, got, test from b2_results
-union all select 99, (select count(*) from public.firms) + (select count(*) from public.audit_log) + (select count(*) from auth.users where email like 'qa-%@demo.saker') = 0,
-  'all undone', (select count(*) from public.firms) || ' firms / ' || (select count(*) from public.audit_log) || ' log / ' || (select count(*) from auth.users where email like 'qa-%@demo.saker') || ' qa users', 'nothing left behind'
+union all select 99, (select count(*) from public.firms) = (select firms from qa_base) and (select count(*) from public.audit_log) = (select log from qa_base)
+  and (select count(*) from storage.objects where bucket_id = 'documents') = (select files from qa_base)
+  and (select value from private.counters where name = 'voucher') = (select counter from qa_base)
+  and (select count(*) from auth.users where email like 'qa-%@demo.saker') = 0,
+  'all undone', (select count(*) from public.firms) - (select firms from qa_base) || ' firms / ' || (select count(*) from public.audit_log) - (select log from qa_base)
+  || ' log / ' || (select count(*) from storage.objects where bucket_id = 'documents') - (select files from qa_base) || ' files added', 'nothing left behind'
 order by n;

@@ -3,6 +3,11 @@
 -- issues a signed link). Everything is UNDONE at the end. Expected: every row pass = true, "nothing left behind".
 -- Proves the RULES inside the database; the live HTTP path (real upload + 5-minute link) is verified in B5/B6 with a
 -- real signed-in user. First run 2026-11-17: 20/20 (delete is refused by Supabase's own guard → 42501), 0 left.
+-- since B5 the database holds data (the demo + test contracts) until B8: the test counts ONLY its own rows and checks
+-- 'nothing left behind' against a snapshot of the totals taken before it runs
+drop table if exists qa_base;
+create temp table qa_base as select (select count(*) from public.firms) as firms, (select count(*) from public.audit_log) as log,
+  (select count(*) from storage.objects where bucket_id = 'documents') as files, (select value from private.counters where name = 'voucher') as counter;
 create temp table if not exists b4_results (n int, test text, expected text, got text, pass boolean);
 truncate b4_results;
 do $do$
@@ -13,7 +18,8 @@ declare
 begin
   begin
     insert into auth.users (id, email) values (ua, 'qa-admin@demo.saker'), (ub, 'qa-boss@demo.saker'), (us, 'qa-stranger@demo.saker');
-    insert into public.app_users (user_id, email, role) values (ua, 'qa-admin@demo.saker', 'admin'), (ub, 'qa-boss@demo.saker', 'boss');
+    -- since b5_people every new account gets its app_users row by itself (role none): the test sets the roles
+    update public.app_users set role = 'admin' where user_id = ua; update public.app_users set role = 'boss' where user_id = ub;
     cases := array[
       -- uploading
       array['Admin uploads docs/<id>.pdf', 'accepted', format($q$insert into storage.objects (bucket_id, name) values ('documents', 'docs/%s.pdf') returning name$q$, f1), 'admin', ''],
@@ -34,8 +40,8 @@ begin
       array['Boss can open the active contract''s file', '=1', format($q$select count(*)::text from storage.objects where name = 'docs/%s.pdf'$q$, f1), 'boss', ''],
       array['Boss cannot open the draft''s file', '=0', format($q$select count(*)::text from storage.objects where name = 'docs/%s.pdf'$q$, f2), 'boss', ''],
       array['Boss cannot open an unregistered upload', '=0', format($q$select count(*)::text from storage.objects where name = 'docs/%s.pdf'$q$, f3), 'boss', ''],
-      array['Boss sees exactly 1 file in the vault', '=1', $q$select count(*)::text from storage.objects where bucket_id = 'documents'$q$, 'boss', ''],
-      array['Admin sees all 3 files', '=3', $q$select count(*)::text from storage.objects where bucket_id = 'documents'$q$, 'admin', ''],
+      array['Boss sees exactly 1 of the 3 test files', '=1', format($q$select count(*)::text from storage.objects where name in ('docs/%s.pdf', 'docs/%s.pdf', 'docs/%s.pdf')$q$, f1, f2, f3), 'boss', ''],
+      array['Admin sees all 3 test files', '=3', format($q$select count(*)::text from storage.objects where name in ('docs/%s.pdf', 'docs/%s.pdf', 'docs/%s.pdf')$q$, f1, f2, f3), 'admin', ''],
       array['a signed-in stranger sees none', '=0', $q$select count(*)::text from storage.objects where bucket_id = 'documents'$q$, 'stranger', ''],
       array['an anonymous visitor sees none', '=0', $q$select count(*)::text from storage.objects where bucket_id = 'documents'$q$, 'anon', '']
     ];
@@ -67,6 +73,10 @@ begin
   insert into b4_results select row_number() over (), split_part(x, '|', 1), split_part(x, '|', 2), split_part(x, '|', 3), split_part(x, '|', 4)::boolean from unnest(res) x;
 end $do$;
 select n, pass, expected, got, test from b4_results
-union all select 99, (select count(*) from storage.objects where bucket_id = 'documents') + (select count(*) from public.firms) + (select count(*) from auth.users where email like 'qa-%') = 0,
-  'all undone', (select count(*) from storage.objects where bucket_id = 'documents') || ' files / ' || (select count(*) from public.firms) || ' firms', 'nothing left behind'
+union all select 99, (select count(*) from public.firms) = (select firms from qa_base) and (select count(*) from public.audit_log) = (select log from qa_base)
+  and (select count(*) from storage.objects where bucket_id = 'documents') = (select files from qa_base)
+  and (select value from private.counters where name = 'voucher') = (select counter from qa_base)
+  and (select count(*) from auth.users where email like 'qa-%@demo.saker') = 0,
+  'all undone', (select count(*) from public.firms) - (select firms from qa_base) || ' firms / ' || (select count(*) from public.audit_log) - (select log from qa_base)
+  || ' log / ' || (select count(*) from storage.objects where bucket_id = 'documents') - (select files from qa_base) || ' files added', 'nothing left behind'
 order by n;
