@@ -4,6 +4,8 @@ Project: Supabase **Saker** (`ayrijizubulczzympslg`). Every change below is writ
 before → after). Nobody is ever deleted once they have done something — access is taken away by the role `none`.
 
 ## Add a person
+0. **The outer gate (Cloudflare):** Zero Trust → Access controls → Policies → **Rule groups → «Saker people» →** add
+   their email. Without this they never reach the app at `https://saker-app.pages.dev`.
 1. **Authentication → Users → Add user → Create new user**: their email, a password, tick **Auto Confirm User**.
    Use an inbox the person really owns — or, for a test account, an `@example.com` address (nobody can own one).
 2. They appear by themselves in `app_users` with the role **`none`** (no access yet).
