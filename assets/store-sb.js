@@ -19,7 +19,51 @@
 
   const URL = 'https://ayrijizubulczzympslg.supabase.co';
   const KEY = 'sb_publishable_nh5rSbaoQrrL8NIHmCjMQQ_-vIz3p-l'; // public by design (a browser key); the database's rules protect the data
-  const sb = root.supabase.createClient(URL, KEY, { auth: { persistSession: true, autoRefreshToken: true, storageKey: 'saker.auth' } });
+  // the session lives in THIS tab only (sessionStorage): closing the tab or the browser ends it (Ibrahim, 2026-11-18)
+  const sb = root.supabase.createClient(URL, KEY, { auth: { persistSession: true, autoRefreshToken: true, storageKey: 'saker.auth',
+    storage: root.sessionStorage, detectSessionInUrl: false } });
+  try {                                                         // sessions kept by the old version (localStorage): gone
+    Object.keys(root.localStorage).filter(k => k.startsWith('saker.auth')).forEach(k => root.localStorage.removeItem(k));
+  } catch (e) { /* private mode */ }
+
+  // ── leaving صقر signs you out (Ibrahim, 2026-11-18) ──
+  //   · leaving the page (another address, Back/Forward, closed tab or browser): index.html's SAKER_LEFT → ended at load;
+  //   · another tab / app / a sleeping screen for more than AWAY_MS: ended when صقر is looked at again.
+  // Ended = revoked on the server (this session only — other devices stay signed in) + removed from the tab.
+  const AWAY_MS = 5 * 60 * 1000;
+  const ss = (k, v) => {
+    try {
+      if (v === undefined) return root.sessionStorage.getItem(k);
+      if (v === null) root.sessionStorage.removeItem(k); else root.sessionStorage.setItem(k, String(v));
+    } catch (e) { return null; }
+    return null;
+  };
+  const awayTooLong = () => {
+    const now = Date.now(), alive = +ss('saker.alive') || 0, hid = +ss('saker.hiddenAt') || 0;
+    return (alive && now - alive > AWAY_MS) || (hid && now - hid > AWAY_MS);
+  };
+  const beat = () => { if (!awayTooLong()) ss('saker.alive', Date.now()); };   // a stale beat is never refreshed
+  async function endSession() {
+    try { await sb.auth.signOut({ scope: 'local' }); } catch (e) { /* offline: removed below anyway */ }
+    try { Object.keys(root.sessionStorage).filter(k => k.startsWith('saker.auth')).forEach(k => root.sessionStorage.removeItem(k)); } catch (e) {}
+    userId = null; me = null; take({});
+  }
+  async function forceOut(why) {
+    const had = !!userId || !!ss('saker.auth');
+    ss('saker.hiddenAt', null); ss('saker.alive', Date.now());   // the new sign-in starts a fresh clock
+    if (!had) return;
+    await endSession();
+    root.dispatchEvent(new CustomEvent('saker:signedout', { detail: why }));   // app.js shows the sign-in again
+  }
+  const left = root.SAKER_LEFT !== false;                       // decided by index.html before anything changed
+  ss('saker.hiddenAt', null); ss('saker.alive', Date.now());
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) { beat(); ss('saker.hiddenAt', Date.now()); return; }
+    if (awayTooLong()) forceOut('away'); else { ss('saker.hiddenAt', null); beat(); }
+  });
+  root.addEventListener('pagehide', beat);
+  root.addEventListener('pageshow', e => { if (e.persisted) forceOut('left'); });   // brought back from the browser's cache
+  setInterval(() => { if (document.hidden) return; if (awayTooLong()) forceOut('away'); else beat(); }, 5000);   // also catches a sleeping screen
 
   const TABLES = ['firms', 'documents', 'contracts', 'installments', 'anchors', 'notes', 'links', 'payments', 'allocations', 'vouchers', 'audit_log'];
   const empty = () => Object.fromEntries(TABLES.map(t => [t, []]));
@@ -119,6 +163,7 @@
     // ── who is signed in ──
     get me() { return me; },
     ready: (async () => {
+      if (left) await endSession();                            // this load came from outside صقر: sign in again
       const { data } = await sb.auth.getSession();
       userId = data.session ? data.session.user.id : null;
       if (!userId) return null;

@@ -448,6 +448,8 @@
     if (m.lang && !store.get('lang', '')) state.lang = m.lang;
   }
   // on the database: wait to learn whether a session is already open (no sign-in flash when it is)
+  // the database ended the session because the user left صقر (store-sb.js): back to the sign-in, nothing kept on screen
+  window.addEventListener('saker:signedout', () => { state.user = null; state.details = false; state.open = null; V.close(); render(); });
   if (S.remote) S.ready.then(m => { if (m) { applyMe(m); state.user = m.email; } render(); });
   else render();
   paintScene();                                                     // ready before any sign-in hands over
