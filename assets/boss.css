@@ -197,6 +197,9 @@ body.panel-open.panel-wide main { margin-right: 0; }
 .admin-soon { font-size: 18px; }
 
 /* ── phone ── */
+/* the due date's own small label, shown only where the column names are hidden (phones, narrow lists): the one
+   cell a reader could misread — reference, amount and status explain themselves (Ibrahim, 2026-11-18) */
+.cell.date .dlab { display: none; font-size: 11.5px; line-height: 1.2; color: var(--text-3); }
 @media (max-width: 720px) {
   body:not(.signing) .bar { height: 56px; }
   body:not(.signing) .panel { top: 0; }
@@ -229,6 +232,8 @@ body.panel-open.panel-wide main { margin-right: 0; }
   .row { grid-template-columns: max-content minmax(0, 1fr); grid-template-areas: "ref amt" "date status" "note note"; gap: 8px 12px; }
   .cell.ref { grid-area: ref; } .cell.amt { grid-area: amt; justify-self: end; max-width: 100%; }   /* framed values never overlap */
   .cell.date { grid-area: date; font-size: 15px; color: var(--text-2); }
+  .cell.date { display: grid; grid-template-columns: max-content max-content; justify-content: start; align-items: center; gap: 1px 8px; }
+  .cell.date .dlab { display: block; grid-column: 1 / -1; }   /* a caption ABOVE the date: the cell is only as wide as the date */
   .cell.status { grid-area: status; justify-self: end; }
   .cell.note { grid-area: note; }
   .cell.note.none { display: none; }

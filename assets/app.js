@@ -189,7 +189,7 @@
           <button class="cell amt link" role="cell" data-open="${r.paid_ever_cents > 0 ? 'compare' : 'clause'}" data-part="amount" data-i="${k}" title="${esc(T.installment(r.installment.seq, n))}">
             <span class="v">${money(r.due_cents)}</span>${proofIcon}${showOf ? `<small dir="${T.dir}">${esc(T.of)} ${money(r.original_cents)}</small>` : ''}${r.paid_cents > 0 && r.remaining_cents > 0 ? `<small dir="${T.dir}">${esc(T.stripLeft)} ${money(r.remaining_cents)}</small>` : ''}
           </button>
-          <button class="cell date link" role="cell" data-open="clause" data-part="date" data-i="${k}" title="${esc(date(r.installment.due_on))}"><span class="v">${esc(dmy(r.installment.due_on))}</span>${proofIcon}</button>
+          <button class="cell date link" role="cell" data-open="clause" data-part="date" data-i="${k}" title="${esc(date(r.installment.due_on))}"><span class="dlab" dir="${T.dir}">${esc(T.dueOn)}</span><span class="v">${esc(dmy(r.installment.due_on))}</span>${proofIcon}</button>
           ${r.status === 'paid' && r.clickable_status
             ? `<button class="cell status link" role="cell" data-open="proof" data-i="${k}" title="${esc(T.transfer)}">${statusChip(r).replace(/<\/span>$/, proofIcon + '</span>')}</button>`
             : `<span class="cell status" role="cell">${statusChip(r)}</span>`}
