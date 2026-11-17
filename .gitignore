@@ -18,3 +18,19 @@ __pycache__/
 *.pyc
 node_modules/
 *.log
+
+# Kept on this computer only — not needed for the app to run (Ibrahim, 2026-11-18: "remove anything from the repo that
+# is not necessary for the app to run"). The live site serves only what is in the repo.
+# Stays in the repo: index.html · _headers · assets/ · the brand files the app shows · brand/posters/*.webp ·
+# data/demo.js (index.html loads it) · supabase/migrations/ (Supabase builds the database from it).
+CLAUDE.md
+README.md
+_guide/
+tests/
+tools/
+docs/
+supabase/tests/
+supabase/pending/
+brand/_traced/
+brand/saker-lockup.svg
+brand/posters/manifest.json
