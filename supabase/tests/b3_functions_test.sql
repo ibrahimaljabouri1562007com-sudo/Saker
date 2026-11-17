@@ -3,14 +3,21 @@
 -- fix → finish → locked → payment → credit use / reversal with gap-free vouchers → references, notes), then checks what
 -- the Boss, a stranger and an anonymous visitor may call and read. Values from earlier steps are kept by name ({c1}…).
 -- Everything is UNDONE at the end (incl. the voucher counter). Expected: every row pass = true, "nothing left behind".
--- First run 2026-11-17: 48/48 pass, 0 rows left, counter 0.
+-- First run 2026-11-17: 48/48 pass, 0 rows left, counter 0. Re-run after B4 (files uploaded first): see the plan.
+-- since B4 a file must be uploaded before it is registered: the test "uploads" its fixture files first (a row in storage)
+create or replace function pg_temp.qa_file(p_id uuid, p_name text, p_pages int, p_page int default null, p_box jsonb default null)
+  returns jsonb language plpgsql security definer as $f$
+begin
+  insert into storage.objects (bucket_id, name) values ('documents', 'docs/' || p_id || '.pdf') on conflict do nothing;
+  return jsonb_strip_nulls(jsonb_build_object('id', p_id, 'file_name', p_name, 'pages', p_pages, 'sha256', repeat('a', 64), 'page', p_page, 'box', p_box));
+end $f$;
 create temp table if not exists b3_results (n int, test text, expected text, got text, pass boolean);
 truncate b3_results;
 do $do$
 declare
   ua uuid := '00000000-0000-0000-0000-0000000000a1'; ub uuid := '00000000-0000-0000-0000-0000000000b1'; us uuid := '00000000-0000-0000-0000-0000000000c1';
-  fc text := 'jsonb_build_object(''id'', gen_random_uuid(), ''file_name'', ''c.pdf'', ''pages'', 2, ''sha256'', repeat(''a'', 64))';
-  fr text := 'jsonb_build_object(''id'', gen_random_uuid(), ''file_name'', ''r.pdf'', ''pages'', 1, ''sha256'', repeat(''b'', 64), ''page'', 1, ''box'', jsonb_build_array(0.2, 0.3, 0.4, 0.05))';
+  fc text := 'pg_temp.qa_file(gen_random_uuid(), ''c.pdf'', 2)';
+  fr text := 'pg_temp.qa_file(gen_random_uuid(), ''r.pdf'', 1, 1, jsonb_build_array(0.2, 0.3, 0.4, 0.05))';
   cases text[][]; v jsonb := '{}'; res text[] := '{}'; k int; q text; key text; val text; got text; who text; exp text; ok boolean;
 begin
   begin
@@ -100,6 +107,6 @@ begin
 end $do$;
 select n, pass, expected, got, test from b3_results
 union all select 99, (select count(*) from public.firms) + (select count(*) from public.audit_log) + (select count(*) from auth.users where email like 'qa-%@demo.saker') = 0
-  and (select value from private.counters where name = 'voucher') = 0,
+  and (select value from private.counters where name = 'voucher') = 0 and (select count(*) from storage.objects where bucket_id = 'documents') = 0,
   'all undone', (select count(*) from public.firms) || ' firms / ' || (select count(*) from public.audit_log) || ' log / counter ' || (select value from private.counters where name = 'voucher'), 'nothing left behind'
 order by n;
